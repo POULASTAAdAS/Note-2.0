@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Note.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#000020</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_note_night</item>
+        <item name="postSplashScreenTheme">@style/Theme.Note</item>
+    </style>
+
+</resources>

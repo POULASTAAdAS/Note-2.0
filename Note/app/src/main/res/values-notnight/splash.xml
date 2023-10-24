@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Note.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#ECF7FC</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_note_light</item>
+        <item name="postSplashScreenTheme">@style/Theme.Note</item>
+    </style>
+
+</resources>
