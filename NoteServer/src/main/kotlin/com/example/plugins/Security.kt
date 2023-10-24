@@ -22,9 +22,9 @@ fun Application.configureSecurity() {
 
     install(Authentication) {
         session<UserSession>("google-auth") {
-            validate {
-                if (it.sub == this.sessions.get<UserSession>()?.sub)
-                    it
+            validate { userSession ->
+                if (userSession.sub == this.sessions.get<UserSession>()?.sub)
+                    userSession
                 else
                     null
             }

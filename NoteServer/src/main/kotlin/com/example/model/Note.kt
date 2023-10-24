@@ -5,9 +5,6 @@ import org.bson.codecs.pojo.annotations.BsonId
 
 @Serializable
 data class Note(
-
-    //TODO may change in future
-
     @BsonId
     val _id: String? = null,
     val heading: String? = null,

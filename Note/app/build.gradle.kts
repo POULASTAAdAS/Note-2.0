@@ -89,6 +89,7 @@ dependencies {
 
     val roomVersion = "2.6.0"
 
+    // room
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     //noinspection KaptUsageInsteadOfKsp

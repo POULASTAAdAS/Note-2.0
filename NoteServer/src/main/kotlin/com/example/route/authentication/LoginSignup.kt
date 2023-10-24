@@ -1,6 +1,7 @@
 package com.example.route.authentication
 
 import com.auth0.jwk.JwkProvider
+import com.example.data.repository.NoteDataBaseOperation
 import com.example.model.EndPoint
 import com.example.model.LoginRequest
 import com.example.model.LoginResponse
@@ -14,15 +15,16 @@ fun Route.loginSignup(
     jwkProvider: JwkProvider,
     privateKeyString: String,
     audience: String,
-    issuer: String
+    issuer: String,
+    dataBaseOperation: NoteDataBaseOperation
 ) {
     post(EndPoint.LoginSignUp.path) {
         val loginRequest = call.receive<LoginRequest>()
 
         if (loginRequest.googleToken != null) {
-            googleAuthentication(loginRequest.googleToken)
+            googleAuthentication(loginRequest.googleToken, loginRequest.googleTokenInitial, dataBaseOperation)
         } else if (loginRequest.email != null && loginRequest.password != null) {
-            basicAuthentication(jwkProvider, privateKeyString, audience, issuer, loginRequest)
+            jwtAuthentication(jwkProvider, privateKeyString, audience, issuer, loginRequest, dataBaseOperation)
         } else {
             call.respond(
                 message = LoginResponse(

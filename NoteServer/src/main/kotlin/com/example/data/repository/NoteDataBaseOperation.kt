@@ -1,15 +1,17 @@
 package com.example.data.repository
 
 import com.example.model.Note
+import com.example.model.User
+import com.example.utils.UserExists
+
 
 interface NoteDataBaseOperation {
-    suspend fun getAll(): List<Note>
+    suspend fun createGoogleAuthenticatedUser(user: User): UserExists
+    suspend fun createJWTAuthenticatedUser(user: User): UserExists
 
-    suspend fun addOne(note: Note): Boolean
-    suspend fun addMultiple(listOfNote: List<Note>): Boolean
+    suspend fun getAllNoteForJWTAuthenticatedUser(email: String): List<Note>
+    suspend fun getAllNoteForGoogleAuthenticatedUser(sub: String): List<Note>
 
-    suspend fun upDateOne(note: Note): Boolean
-    suspend fun updateMultiple(listOfNote: List<Note>)
-
-    suspend fun deleteOne(_id: String): Boolean
+    suspend fun addOneForJWTUser(note: Note, email: String): Boolean
+    suspend fun addOneForGoogleUser(note: Note, sub: String): Boolean
 }

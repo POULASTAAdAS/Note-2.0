@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 data class LoginRequest(
     val email: String? = null,
     val password: String? = null,
-    val googleToken: String? = null
+    val googleToken: String? = null,
+    val googleTokenInitial: Boolean? = null
 )
