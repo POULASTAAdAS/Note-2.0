@@ -184,9 +184,6 @@ class LoginViewModel @Inject constructor(
     ) {
         credential.run {
             signInOrSignUpWithCredential(activity)
-//            activity.let { // TODO IDE recommended to remove it
-//                signInOrSignUpWithCredential(activity)
-//            }
         }
     }
 
