@@ -1,4 +1,4 @@
-package com.example.route.insert
+package com.example.route.update
 
 import com.example.data.repository.NoteDataBaseOperation
 import com.example.model.ApiRequest
@@ -13,9 +13,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
+fun Route.updateOne(dataBaseOperation: NoteDataBaseOperation) {
     authenticate("google-auth", "auth-jwt") {
-        post(EndPoint.AddOne.path) {
+        patch(EndPoint.UpdateOne.path) {
             val result = call.receive<ApiRequest>().note
 
             if (result != null) {
@@ -27,22 +27,15 @@ fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
                     val email = claim.split("_")[0]
 
                     try {
-                        if (dataBaseOperation.addOneForJWTUser(note = result, email = email))
-                            call.respond(
-                                message = ApiResponse(
-                                    status = true,
-                                    message = "one inserted"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
-                        else
-                            call.respond(
-                                message = ApiResponse(
-                                    status = false,
-                                    message = "unable to insert jwt auth"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
+                        dataBaseOperation.updateOneForJWTUser(result, email = email)
+
+                        call.respond(
+                            message = ApiResponse(
+                                status = true,
+                                message = "one updated jwt"
+                            ),
+                            status = HttpStatusCode.OK
+                        )
                     } catch (e: Exception) {
                         call.respond(
                             message = ApiResponse(
@@ -53,23 +46,17 @@ fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
                         )
                     }
                 } else if (sub != null) {
+
                     try {
-                        if (dataBaseOperation.addOneForGoogleUser(note = result, sub = sub))
-                            call.respond(
-                                message = ApiResponse(
-                                    status = true,
-                                    message = "one inserted"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
-                        else
-                            call.respond(
-                                message = ApiResponse(
-                                    status = false,
-                                    message = "unable to insert google auth"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
+
+
+                        call.respond(
+                            message = ApiResponse(
+                                status = true,
+                                message = "one updated google"
+                            ),
+                            status = HttpStatusCode.OK
+                        )
                     } catch (e: Exception) {
                         call.respond(
                             message = ApiResponse(
@@ -88,16 +75,15 @@ fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
                         status = HttpStatusCode.NoContent
                     )
                 }
+
             }
-            else {
-                call.respond(
-                    message = ApiResponse(
-                        status = false,
-                        message = "req body empty"
-                    ),
-                    status = HttpStatusCode.NoContent
-                )
-            }
+            call.respond(
+                message = ApiResponse(
+                    status = false,
+                    message = "req body empty"
+                ),
+                status = HttpStatusCode.NoContent
+            )
         }
     }
 }

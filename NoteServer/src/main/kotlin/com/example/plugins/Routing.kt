@@ -4,9 +4,11 @@ import com.auth0.jwk.JwkProviderBuilder
 import com.example.data.repository.NoteDataBaseOperation
 import com.example.route.authentication.loginSignup
 import com.example.route.authorized
+import com.example.route.insert.insertMultiple
 import com.example.route.insert.insertOne
 import com.example.route.root
 import com.example.route.unAuthorized
+import com.example.route.update.updateOne
 import com.mongodb.client.model.Filters
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
@@ -31,11 +33,14 @@ fun Application.configureRouting() {
     val dataBaseOperation: NoteDataBaseOperation by KoinJavaComponent.inject(NoteDataBaseOperation::class.java)
 
     routing {
-        loginSignup(jwkProvider, privateKeyString, audience, issuer , dataBaseOperation)
+        loginSignup(jwkProvider, privateKeyString, audience, issuer, dataBaseOperation)
         root()
         authorized()
-        insertOne(dataBaseOperation)
 
+        insertOne(dataBaseOperation)
+        insertMultiple(dataBaseOperation)
+
+        updateOne(dataBaseOperation)
 
         unAuthorized()
 

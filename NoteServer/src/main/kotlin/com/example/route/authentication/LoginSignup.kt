@@ -22,7 +22,7 @@ fun Route.loginSignup(
         val loginRequest = call.receive<LoginRequest>()
 
         if (loginRequest.googleToken != null) {
-            googleAuthentication(loginRequest.googleToken, loginRequest.googleTokenInitial, dataBaseOperation)
+            googleAuthentication(loginRequest.googleToken, loginRequest.initial, dataBaseOperation)
         } else if (loginRequest.email != null && loginRequest.password != null) {
             jwtAuthentication(jwkProvider, privateKeyString, audience, issuer, loginRequest, dataBaseOperation)
         } else {

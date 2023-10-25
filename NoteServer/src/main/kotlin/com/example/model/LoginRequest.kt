@@ -8,5 +8,5 @@ data class LoginRequest(
     val email: String? = null,
     val password: String? = null,
     val googleToken: String? = null,
-    val googleTokenInitial: Boolean? = null
+    val initial: Boolean? = null
 )

@@ -13,10 +13,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
+fun Route.insertMultiple(dataBaseOperation: NoteDataBaseOperation) {
     authenticate("google-auth", "auth-jwt") {
-        post(EndPoint.AddOne.path) {
-            val result = call.receive<ApiRequest>().note
+        post(EndPoint.AddMultiple.path) {
+            val result = call.receive<ApiRequest>().listOfNote
 
             if (result != null) {
                 val claim =
@@ -27,22 +27,15 @@ fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
                     val email = claim.split("_")[0]
 
                     try {
-                        if (dataBaseOperation.addOneForJWTUser(note = result, email = email))
-                            call.respond(
-                                message = ApiResponse(
-                                    status = true,
-                                    message = "one inserted"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
-                        else
-                            call.respond(
-                                message = ApiResponse(
-                                    status = false,
-                                    message = "unable to insert jwt auth"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
+                        dataBaseOperation.addMultipleForJWTUser(result, email)
+
+                        call.respond(
+                            message = ApiResponse(
+                                status = true,
+                                message = "all inserted jwt"
+                            ),
+                            status = HttpStatusCode.OK
+                        )
                     } catch (e: Exception) {
                         call.respond(
                             message = ApiResponse(
@@ -54,22 +47,15 @@ fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
                     }
                 } else if (sub != null) {
                     try {
-                        if (dataBaseOperation.addOneForGoogleUser(note = result, sub = sub))
-                            call.respond(
-                                message = ApiResponse(
-                                    status = true,
-                                    message = "one inserted"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
-                        else
-                            call.respond(
-                                message = ApiResponse(
-                                    status = false,
-                                    message = "unable to insert google auth"
-                                ),
-                                status = HttpStatusCode.OK
-                            )
+                        dataBaseOperation.addMultipleForGoogleUser(result, sub)
+
+                        call.respond(
+                            message = ApiResponse(
+                                status = true,
+                                message = "all inserted google"
+                            ),
+                            status = HttpStatusCode.OK
+                        )
                     } catch (e: Exception) {
                         call.respond(
                             message = ApiResponse(
@@ -88,8 +74,7 @@ fun Route.insertOne(dataBaseOperation: NoteDataBaseOperation) {
                         status = HttpStatusCode.NoContent
                     )
                 }
-            }
-            else {
+            } else {
                 call.respond(
                     message = ApiResponse(
                         status = false,
