@@ -13,10 +13,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.updateOne(dataBaseOperation: NoteDataBaseOperation) {
+fun Route.updateMultiple(dataBaseOperation: NoteDataBaseOperation) {
     authenticate("google-auth", "auth-jwt") {
-        patch(EndPoint.UpdateOne.path) {
-            val result = call.receive<ApiRequest>().note
+        patch(EndPoint.UpdateMultiple.path) {
+            val result = call.receive<ApiRequest>().listOfNote
 
             if (result != null) {
                 val claim =
@@ -27,12 +27,12 @@ fun Route.updateOne(dataBaseOperation: NoteDataBaseOperation) {
                     val email = claim.split("_")[0]
 
                     try {
-                        dataBaseOperation.updateOneForJWTUser(result, email = email)
+                        dataBaseOperation.updateMultipleForJWTUser(result, email)
 
                         call.respond(
                             message = ApiResponse(
                                 status = true,
-                                message = "one updated jwt"
+                                message = "all updated jwt"
                             ),
                             status = HttpStatusCode.OK
                         )
@@ -46,13 +46,13 @@ fun Route.updateOne(dataBaseOperation: NoteDataBaseOperation) {
                         )
                     }
                 } else if (sub != null) {
-                    dataBaseOperation.updateOneForGoogleUser(result, sub)
-
                     try {
+                        dataBaseOperation.updateMultipleForGoogleUser(result, sub)
+
                         call.respond(
                             message = ApiResponse(
                                 status = true,
-                                message = "one updated google"
+                                message = "all updated google"
                             ),
                             status = HttpStatusCode.OK
                         )

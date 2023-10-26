@@ -1,4 +1,4 @@
-package com.example.route.update
+package com.example.route.delete.deleteData
 
 import com.example.data.repository.NoteDataBaseOperation
 import com.example.model.ApiRequest
@@ -13,10 +13,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.updateOne(dataBaseOperation: NoteDataBaseOperation) {
+fun Route.deleteMultiple(dataBaseOperation: NoteDataBaseOperation) {
     authenticate("google-auth", "auth-jwt") {
-        patch(EndPoint.UpdateOne.path) {
-            val result = call.receive<ApiRequest>().note
+        delete(EndPoint.DeleteMultiple.path) {
+            val result = call.receive<ApiRequest>().listOfId
 
             if (result != null) {
                 val claim =
@@ -27,12 +27,12 @@ fun Route.updateOne(dataBaseOperation: NoteDataBaseOperation) {
                     val email = claim.split("_")[0]
 
                     try {
-                        dataBaseOperation.updateOneForJWTUser(result, email = email)
+                        dataBaseOperation.deleteMultipleForJWTUser(result, email)
 
                         call.respond(
                             message = ApiResponse(
                                 status = true,
-                                message = "one updated jwt"
+                                message = "multiple deleted jwt"
                             ),
                             status = HttpStatusCode.OK
                         )
@@ -46,13 +46,13 @@ fun Route.updateOne(dataBaseOperation: NoteDataBaseOperation) {
                         )
                     }
                 } else if (sub != null) {
-                    dataBaseOperation.updateOneForGoogleUser(result, sub)
-
                     try {
+                        dataBaseOperation.deleteMultipleForGoogleUser(result, sub)
+
                         call.respond(
                             message = ApiResponse(
                                 status = true,
-                                message = "one updated google"
+                                message = "one deleted google"
                             ),
                             status = HttpStatusCode.OK
                         )

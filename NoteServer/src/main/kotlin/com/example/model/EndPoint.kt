@@ -14,7 +14,9 @@ sealed class EndPoint(val path: String) {
     data object UpdateMultiple : EndPoint("/update_multiple")
 
     data object DeleteOne : EndPoint("/delete_one")
-    data object DeleteMultiple: EndPoint("/delete_multiple")
+    data object DeleteMultiple : EndPoint("/delete_multiple")
+
+    data object DeleteUser : EndPoint("/delete_user")
 
     data object Authorized : EndPoint("/authorized")
     data object UnAuthorized : EndPoint("/un_authorized")

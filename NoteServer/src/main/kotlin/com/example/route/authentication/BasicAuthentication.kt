@@ -41,7 +41,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.jwtAuthentication(
         null
     }
 
-    if (token != null) { // TODO may change error response to something other than UnAuthorized route
+    if (token != null) {
         try {
             when (
                 noteDataBaseOperation.createJWTAuthenticatedUser(

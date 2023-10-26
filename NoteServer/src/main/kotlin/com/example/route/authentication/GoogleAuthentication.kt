@@ -24,11 +24,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
     val result = verifyTokenId(tokenId = tokenId)
 
     if (result != null) {
-        // TODO Database
-
         val sub = result.payload["sub"].toString()
         val name = result.payload["name"].toString()
-
 
         try {
             call.sessions.set(UserSession(sub = sub, name = name))
@@ -42,7 +39,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                 )
             ) {
                 UserExists.YES_SAME_PASSWORD -> {
-
                     if (initial != null && initial) {
                         try {
                             val listOfNote = dataBaseOperation.getAllNoteForGoogleAuthenticatedUser(sub)

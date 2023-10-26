@@ -53,8 +53,8 @@ class LoginViewModel @Inject constructor(
 
     val loggedInState = mutableStateOf(false)
 
-    private var loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
-        mutableStateOf(DataOrException())
+//    private var loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
+//        mutableStateOf(DataOrException())
 
     init {
         viewModelScope.launch {
@@ -199,7 +199,8 @@ class LoginViewModel @Inject constructor(
             loginResponse.value = networkRepository.loginSignUp(
                 request = LoginRequest(
                     email = emailFiled.value,
-                    password = passwordFiled.value
+                    password = passwordFiled.value,
+                    initial = true
                 )
             )
 
@@ -227,13 +228,14 @@ class LoginViewModel @Inject constructor(
     ) {
         loginResponse.value.loading = true
 
-        Log.d("token" , tokenId)
+        Log.d("token", tokenId)
 
         viewModelScope.launch(Dispatchers.IO) {
 
             loginResponse.value = networkRepository.loginSignUp(
                 request = LoginRequest(
-                    googleToken = tokenId
+                    googleToken = tokenId,
+                    initial = true
                 )
             )
 

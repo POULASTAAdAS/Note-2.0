@@ -6,7 +6,7 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface NoteApi {
-    @POST("login_signup")
+    @POST("/login_signup")
     suspend fun loginSignup(
         @Body request: LoginRequest
     ): LoginResponse

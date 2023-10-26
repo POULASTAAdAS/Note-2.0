@@ -18,9 +18,18 @@ interface NoteDataBaseOperation {
     suspend fun addMultipleForJWTUser(listOfNote: List<Note>, email: String)
     suspend fun addMultipleForGoogleUser(listOfNote: List<Note>, sub: String)
 
-    suspend fun updateOneForJWTUser(note: Note , email: String)
+    suspend fun updateOneForJWTUser(note: Note, email: String)
     suspend fun updateOneForGoogleUser(note: Note, sub: String)
 
     suspend fun updateMultipleForJWTUser(listOfNote: List<Note>, email: String)
     suspend fun updateMultipleForGoogleUser(listOfNote: List<Note>, sub: String)
+
+    suspend fun deleteOneForJWTUser(_id: String, email: String)
+    suspend fun deleteOneForGoogleUser(_id: String, sub: String)
+
+    suspend fun deleteMultipleForJWTUser(listOf_id: List<String>, email: String)
+    suspend fun deleteMultipleForGoogleUser(listOf_id: List<String>, sub: String)
+
+    suspend fun deleteJWTUser(email: String)
+    suspend fun deleteGoogleUser(sub: String)
 }

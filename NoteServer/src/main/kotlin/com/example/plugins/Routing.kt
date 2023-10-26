@@ -4,12 +4,15 @@ import com.auth0.jwk.JwkProviderBuilder
 import com.example.data.repository.NoteDataBaseOperation
 import com.example.route.authentication.loginSignup
 import com.example.route.authorized
+import com.example.route.delete.deleteData.deleteMultiple
+import com.example.route.delete.deleteData.deleteOne
+import com.example.route.delete.deleteUser.deleteUser
 import com.example.route.insert.insertMultiple
 import com.example.route.insert.insertOne
 import com.example.route.root
 import com.example.route.unAuthorized
+import com.example.route.update.updateMultiple
 import com.example.route.update.updateOne
-import com.mongodb.client.model.Filters
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.routing.*
@@ -41,6 +44,12 @@ fun Application.configureRouting() {
         insertMultiple(dataBaseOperation)
 
         updateOne(dataBaseOperation)
+        updateMultiple(dataBaseOperation)
+
+        deleteOne(dataBaseOperation)
+        deleteMultiple(dataBaseOperation)
+
+        deleteUser(dataBaseOperation)
 
         unAuthorized()
 
