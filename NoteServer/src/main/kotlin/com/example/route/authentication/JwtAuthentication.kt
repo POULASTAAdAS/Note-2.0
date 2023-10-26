@@ -4,7 +4,10 @@ import com.auth0.jwk.JwkProvider
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.example.data.repository.NoteDataBaseOperation
-import com.example.model.*
+import com.example.model.EndPoint
+import com.example.model.LoginRequest
+import com.example.model.LoginResponse
+import com.example.model.User
 import com.example.utils.UserExists
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -53,15 +56,10 @@ suspend fun PipelineContext<Unit, ApplicationCall>.jwtAuthentication(
             ) {
                 UserExists.YES_SAME_PASSWORD -> {
                     try {
-                        val listOfNote = noteDataBaseOperation.getAllNoteForJWTAuthenticatedUser(email = loginRequest.email!!)
-
                         call.respond(
                             message = LoginResponse(
                                 userExists = UserExists.YES_SAME_PASSWORD.name,
-                                apiResponse = ApiResponse(
-                                    status = true,
-                                    listOfNote = listOfNote
-                                )
+                                token = token
                             ),
                             status = HttpStatusCode.OK
                         )

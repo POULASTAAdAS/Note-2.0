@@ -1,7 +1,10 @@
 package com.example.route.authentication
 
 import com.example.data.repository.NoteDataBaseOperation
-import com.example.model.*
+import com.example.model.EndPoint
+import com.example.model.LoginResponse
+import com.example.model.User
+import com.example.model.UserSession
 import com.example.utils.Constants.AUDIENCE
 import com.example.utils.Constants.ISSUER
 import com.example.utils.UserExists
@@ -41,15 +44,10 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                 UserExists.YES_SAME_PASSWORD -> {
                     if (initial != null && initial) {
                         try {
-                            val listOfNote = dataBaseOperation.getAllNoteForGoogleAuthenticatedUser(sub)
-
                             call.respond(
                                 message = LoginResponse(
                                     userExists = UserExists.YES_SAME_PASSWORD.name,
-                                    apiResponse = ApiResponse(
-                                        status = true,
-                                        listOfNote = listOfNote
-                                    )
+                                    googleLogIn = true
                                 ),
                                 status = HttpStatusCode.OK
                             )
@@ -71,7 +69,13 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                 }
 
                 UserExists.NO -> {
-                    call.respondRedirect(EndPoint.Authorized.path)
+                    call.respond(
+                        message = LoginResponse(
+                            userExists = UserExists.NO.name,
+                            googleLogIn = true
+                        ),
+                        status = HttpStatusCode.OK
+                    )
                 }
             }
         } catch (e: Exception) {

@@ -8,5 +8,4 @@ data class LoginResponse(
     val userExists: String? = null,
     val googleLogIn: Boolean? = null,
     val message: String? = null,
-    val apiResponse: ApiResponse? = null
 )

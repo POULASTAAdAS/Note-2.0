@@ -9,6 +9,7 @@ import com.example.route.delete.deleteData.deleteOne
 import com.example.route.delete.deleteUser.deleteUser
 import com.example.route.insert.insertMultiple
 import com.example.route.insert.insertOne
+import com.example.route.read.getAll
 import com.example.route.root
 import com.example.route.unAuthorized
 import com.example.route.update.updateMultiple
@@ -39,6 +40,8 @@ fun Application.configureRouting() {
         loginSignup(jwkProvider, privateKeyString, audience, issuer, dataBaseOperation)
         root()
         authorized()
+
+        getAll(dataBaseOperation)
 
         insertOne(dataBaseOperation)
         insertMultiple(dataBaseOperation)

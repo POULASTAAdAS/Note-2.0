@@ -53,8 +53,9 @@ class LoginViewModel @Inject constructor(
 
     val loggedInState = mutableStateOf(false)
 
-//    private var loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
-//        mutableStateOf(DataOrException())
+    private var loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
+        mutableStateOf(DataOrException())
+
 
     init {
         viewModelScope.launch {
@@ -163,11 +164,32 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    private fun test(credential: PasswordCredential) {
+        viewModelScope.launch {
+            loginResponse.value = networkRepository.loginSignUp(
+                request = LoginRequest(
+                    email = credential.id,
+                    password = credential.password,
+                    initial = true
+                )
+            )
+
+            if (loginResponse.value.data?.token != null) {
+                dataStoreOperation.saveUpdateJWTToken(loginResponse.value.data!!.token!!)
+
+                Log.d("loginResponse", loginResponse.value.data!!.userExists.toString())
+                Log.d("loginResponse", loginResponse.value.data!!.token!!)
+            }
+        }
+    }
+
     // one time call
     fun signInWithSavedCredential(activity: Activity) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val credential = getCredential(activity) ?: return@launch
+
+                test(credential = credential)
                 signedInPasswordCredential.value = credential
                 dataStoreOperation.saveUpdateSignedInState(true)
                 loggedInState.value = true
@@ -204,9 +226,11 @@ class LoginViewModel @Inject constructor(
                 )
             )
 
-
             if (loginResponse.value.data?.token != null) {
                 val jwtToken = loginResponse.value.data!!.token!!
+
+                // TODO UserExists.YES_DIFF_PASSWORD
+
                 saveJWTToken(jwtToken)
 
                 startBasicLoginProcess(
@@ -227,8 +251,7 @@ class LoginViewModel @Inject constructor(
         tokenId: String
     ) {
         loginResponse.value.loading = true
-
-        Log.d("token", tokenId)
+        Log.d("token", tokenId) // TODO comment time of production
 
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -239,8 +262,7 @@ class LoginViewModel @Inject constructor(
                 )
             )
 
-            if (loginResponse.value.data?.message != null && loginResponse.value.data?.message == "authorized") {
-                loginResponse.value.data!!.googleLogIn = true
+            if (loginResponse.value.data?.googleLogIn != null && loginResponse.value.data?.googleLogIn == true) {
                 dataStoreOperation.saveUpdateSignedInState(true)
                 loggedInState.value = true
             } else {

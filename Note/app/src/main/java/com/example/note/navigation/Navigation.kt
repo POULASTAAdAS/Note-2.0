@@ -4,9 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.note.presentation.screen.home.HomeScreen
+import com.example.note.presentation.screen.home.HomeViewModel
 import com.example.note.presentation.screen.login.LoginScreen
 import com.example.note.presentation.screen.login.LoginViewModel
 import kotlinx.coroutines.delay
@@ -25,22 +28,36 @@ fun SetUpNavGraph(
             val loginViewModel: LoginViewModel = hiltViewModel()
 
             LoginScreen(loginViewModel = loginViewModel,
-                navigateToHome = {
+                navigateToHome = { userExists ->
                     navHostController.popBackStack()
-                    navHostController.navigate(Screens.Home.path)
+                    navHostController.navigate("home_screen/$userExists")
                     keepSplashOpened()
                 }
             )
 
-            LaunchedEffect(key1 = Unit){
+            LaunchedEffect(key1 = Unit) {
                 delay(400)
                 keepSplashOpened()
             }
-
         }
 
-        composable(route = Screens.Home.path) {
-            HomeScreen()
+        composable(route = Screens.Home.path,
+            arguments = listOf(
+                navArgument("userExists") {
+                    type = NavType.BoolType
+                }
+            )
+        ) {
+            val homeViewModel: HomeViewModel = hiltViewModel()
+
+            HomeScreen(
+                userExists = it.arguments!!.getBoolean("userExists"), // TODO try adding false if not called from login screen
+                homeViewModel = homeViewModel,
+                navigateToSelectedScreen = {
+                    navHostController.popBackStack()
+                    // TODO navigation
+                }
+            )
         }
     }
 }

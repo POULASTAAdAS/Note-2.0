@@ -15,7 +15,7 @@ import com.example.note.presentation.common.singIn
 @Composable
 fun LoginScreen(
     loginViewModel: LoginViewModel,
-    navigateToHome: () -> Unit
+    navigateToHome: (Boolean) -> Unit
 ) {
     val googleButtonLoadingState by loginViewModel.googleButtonLoadingState
     val basicLoginLoadingState by loginViewModel.basicLoginLoadingState
@@ -111,13 +111,13 @@ fun LoginScreen(
         }
     }
 
-    LaunchedEffect(key1 = Unit) {
-        if (loggedInState) navigateToHome()
+    LaunchedEffect(key1 = Unit) {// open app any other time
+        if (loggedInState) navigateToHome(true)
         else loginViewModel.signInWithSavedCredential(activity)
     }
 
-    LaunchedEffect(key1 = loggedInState) {
-        if (loggedInState) navigateToHome()
+    LaunchedEffect(key1 = loggedInState) { // first time login
+        if (loggedInState) navigateToHome(true)
     }
 }
 
