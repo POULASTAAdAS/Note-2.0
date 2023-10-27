@@ -19,19 +19,20 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiNetworkModule {
-
     @Provides
     @Singleton
     fun provideCookieManager(): CookieManager = CookieManager()
 
+
     @Provides
     @Singleton
-    fun provideHttpClient(cookieManager: CookieManager) =
+    fun provideHttpClient(cookieManager: CookieManager): OkHttpClient =
         OkHttpClient
             .Builder()
             .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
             .connectTimeout(15, TimeUnit.SECONDS)
-            .cookieJar(JavaNetCookieJar(cookieManager))
+            .cookieJar(JavaNetCookieJar(cookieManager))  // Temp()
             .build()
 
     @Provides

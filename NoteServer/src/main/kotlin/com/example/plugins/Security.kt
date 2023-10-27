@@ -8,7 +8,6 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
-import io.ktor.server.sessions.*
 import java.util.concurrent.TimeUnit
 
 fun Application.configureSecurity() {
@@ -23,10 +22,9 @@ fun Application.configureSecurity() {
     install(Authentication) {
         session<UserSession>("google-auth") {
             validate { userSession ->
-                if (userSession.sub == this.sessions.get<UserSession>()?.sub)
-                    userSession
-                else
-                    null
+//                println()
+//                println(userSession.toString() + "\n\n\n\n\n\n\n\n\n\n\n\n\n")
+                userSession
             }
             challenge {
                 call.resolveResource(EndPoint.UnAuthorized.path)

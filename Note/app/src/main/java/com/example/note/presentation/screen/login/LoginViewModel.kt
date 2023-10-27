@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.note.data.remote.DataOrException
 import com.example.note.domain.model.LoginRequest
 import com.example.note.domain.model.LoginResponse
+import com.example.note.domain.model.UserExists
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,6 +62,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             dataStoreOperation.readSignedInState().collect {
                 loggedInState.value = it
+                Log.d("loginState.value login", it.toString())
             }
         }
     }
@@ -126,6 +128,7 @@ class LoginViewModel @Inject constructor(
                     context = activity, request = CreatePasswordRequest(email, password)
                 )
                 dataStoreOperation.saveUpdateSignedInState(true)
+                dataStoreOperation.saveFirstTimeLoginState(true)
                 loggedInState.value = true
 
                 Log.d("CredentialTest", "saving successful")
@@ -166,19 +169,17 @@ class LoginViewModel @Inject constructor(
 
     private fun test(credential: PasswordCredential) {
         viewModelScope.launch {
-            loginResponse.value = networkRepository.loginSignUp(
-                request = LoginRequest(
-                    email = credential.id,
-                    password = credential.password,
-                    initial = true
+            loginResponse.value =
+                networkRepository.loginSignUp( // TODO signInWithSavedCredential server req to get jwt token
+                    request = LoginRequest(
+                        email = credential.id,
+                        password = credential.password,
+                        initial = true
+                    )
                 )
-            )
 
             if (loginResponse.value.data?.token != null) {
                 dataStoreOperation.saveUpdateJWTToken(loginResponse.value.data!!.token!!)
-
-                Log.d("loginResponse", loginResponse.value.data!!.userExists.toString())
-                Log.d("loginResponse", loginResponse.value.data!!.token!!)
             }
         }
     }
@@ -192,6 +193,7 @@ class LoginViewModel @Inject constructor(
                 test(credential = credential)
                 signedInPasswordCredential.value = credential
                 dataStoreOperation.saveUpdateSignedInState(true)
+                dataStoreOperation.saveFirstTimeLoginState(true)
                 loggedInState.value = true
             } catch (e: Exception) {
                 Log.d("CredentialTest", "error getting credential" + e.message.toString())
@@ -218,7 +220,7 @@ class LoginViewModel @Inject constructor(
         loginResponse.value.loading = true
 
         viewModelScope.launch(Dispatchers.IO) {
-            loginResponse.value = networkRepository.loginSignUp(
+            loginResponse.value = networkRepository.loginSignUp( //TODO first time login using jwt
                 request = LoginRequest(
                     email = emailFiled.value,
                     password = passwordFiled.value,
@@ -229,14 +231,17 @@ class LoginViewModel @Inject constructor(
             if (loginResponse.value.data?.token != null) {
                 val jwtToken = loginResponse.value.data!!.token!!
 
-                // TODO UserExists.YES_DIFF_PASSWORD
+                if (loginResponse.value.data!!.userExists!! == UserExists.YES_SAME_PASSWORD.name) {
+                    saveJWTToken(jwtToken)
 
-                saveJWTToken(jwtToken)
+                    startBasicLoginProcess(
+                        activity = activity,
+                        credential = credential
+                    )
+                } else {
+                    // TODO UserExists.YES_DIFF_PASSWORD
 
-                startBasicLoginProcess(
-                    activity = activity,
-                    credential = credential
-                )
+                }
             } else {
                 unableToLogin.value = true
                 emptyTextAndPasswordField()
@@ -254,8 +259,7 @@ class LoginViewModel @Inject constructor(
         Log.d("token", tokenId) // TODO comment time of production
 
         viewModelScope.launch(Dispatchers.IO) {
-
-            loginResponse.value = networkRepository.loginSignUp(
+            loginResponse.value = networkRepository.loginSignUp( // TODO login using google
                 request = LoginRequest(
                     googleToken = tokenId,
                     initial = true
@@ -264,6 +268,7 @@ class LoginViewModel @Inject constructor(
 
             if (loginResponse.value.data?.googleLogIn != null && loginResponse.value.data?.googleLogIn == true) {
                 dataStoreOperation.saveUpdateSignedInState(true)
+                dataStoreOperation.saveFirstTimeLoginState(true)
                 loggedInState.value = true
             } else {
                 unableToLogin.value = true

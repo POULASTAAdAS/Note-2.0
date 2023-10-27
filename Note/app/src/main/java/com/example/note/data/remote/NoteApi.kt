@@ -15,8 +15,8 @@ interface NoteApi {
     ): LoginResponse
 
     @GET("/get_all")
-    suspend fun getAll(
-        @Header("Authorization")
+    suspend fun getAllGoogle( // todo diff function for dif authenticated user  or  test cookieManager.put
+        @Header("Cookie")
         token: String
     ): ApiResponse
 }

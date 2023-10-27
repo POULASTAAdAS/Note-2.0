@@ -33,6 +33,8 @@ fun StartActivityForResult(
                     val oneTapClient = Identity.getSignInClient(activity)
                     val credential = oneTapClient.getSignInCredentialFromIntent(it.data)
 
+                    Log.d("it", it.data.toString())
+
                     val tokenId = credential.googleIdToken
 
                     if (tokenId != null) {

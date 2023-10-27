@@ -12,11 +12,9 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkRepositoryModule {
-
     @Provides
     @Singleton
     fun provideNetworkRepository(
         noteApi: NoteApi
     ): NetworkRepository = NetworkRepositoryImpl(noteApi = noteApi)
-
 }

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.note.domain.repository.DataStoreOperation
+import com.example.note.utils.Constants.PREFERENCES_FIRST_TIME_SIGNED_IN_KEY
 import com.example.note.utils.Constants.PREFERENCES_JWT_TOKEN_KEY
 import com.example.note.utils.Constants.PREFERENCES_SIGNED_IN_KEY
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,7 @@ class DataStoreOperationImpl @Inject constructor(
     private object PreferencesKey {
         val signedInKey = booleanPreferencesKey(name = PREFERENCES_SIGNED_IN_KEY)
         val jwtTokenKey = stringPreferencesKey(name = PREFERENCES_JWT_TOKEN_KEY)
+        val firstLogInState = booleanPreferencesKey(name = PREFERENCES_FIRST_TIME_SIGNED_IN_KEY)
     }
 
     override suspend fun saveUpdateSignedInState(signedInState: Boolean) {
@@ -58,5 +60,24 @@ class DataStoreOperationImpl @Inject constructor(
             val jwtToken = it[PreferencesKey.jwtTokenKey] ?: ""
 
             jwtToken
+        }
+
+    override suspend fun saveFirstTimeLoginState(firstLogInState: Boolean) {
+        dataStore.edit {
+            it[PreferencesKey.firstLogInState] = firstLogInState
+        }
+    }
+
+    override fun readFirstTimeLoginState(): Flow<Boolean> = dataStore
+        .data
+        .catch { e ->
+            if (e is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw e
+            }
+        }.map {
+            val firstTimeSignedInState = it[PreferencesKey.firstLogInState] ?: false
+            firstTimeSignedInState
         }
 }

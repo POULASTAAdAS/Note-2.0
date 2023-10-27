@@ -27,10 +27,9 @@ class NetworkRepositoryImpl @Inject constructor(
         val result = try {
             Log.d("error getting all data: ", "called")
 
-            noteApi.getAll(token = token)
-//            noteApi.getAll()
+            noteApi.getAllGoogle(token = token)
         } catch (e: Exception) {
-            Log.d("error getting all data: ", e.message.toString()) // todo error
+            Log.d("error getting all data: ", e.message.toString())
             return DataOrException(e = e)
         }
 

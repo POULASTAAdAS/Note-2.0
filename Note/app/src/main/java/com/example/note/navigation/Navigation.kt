@@ -27,31 +27,23 @@ fun SetUpNavGraph(
         composable(route = Screens.Login.path) {
             val loginViewModel: LoginViewModel = hiltViewModel()
 
-            LoginScreen(loginViewModel = loginViewModel,
-                navigateToHome = { userExists ->
-                    navHostController.popBackStack()
-                    navHostController.navigate("home_screen/$userExists")
-                    keepSplashOpened()
-                }
-            )
-
             LaunchedEffect(key1 = Unit) {
                 delay(400)
                 keepSplashOpened()
             }
-        }
-
-        composable(route = Screens.Home.path,
-            arguments = listOf(
-                navArgument("userExists") {
-                    type = NavType.BoolType
+            LoginScreen(loginViewModel = loginViewModel,
+                navigateToHome = {
+                    navHostController.popBackStack()
+                    navHostController.navigate("home_screen")
+                    keepSplashOpened()
                 }
             )
-        ) {
+        }
+
+        composable(route = Screens.Home.path) {
             val homeViewModel: HomeViewModel = hiltViewModel()
 
             HomeScreen(
-                userExists = it.arguments!!.getBoolean("userExists"), // TODO try adding false if not called from login screen
                 homeViewModel = homeViewModel,
                 navigateToSelectedScreen = {
                     navHostController.popBackStack()
