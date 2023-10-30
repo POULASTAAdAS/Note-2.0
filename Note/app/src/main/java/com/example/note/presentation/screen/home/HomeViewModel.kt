@@ -9,10 +9,13 @@ import com.example.note.data.remote.DataOrException
 import com.example.note.domain.model.ApiResponse
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
+import com.example.note.utils.Constants.BASE_URL
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.net.CookieManager
+import java.net.URI
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,37 +25,90 @@ class HomeViewModel @Inject constructor(
     private val cookieManager: CookieManager
 ) : ViewModel() {
 
-    private var apiResponse: MutableState<DataOrException<ApiResponse, Boolean, Exception>> =
+    private val _apiResponse: MutableState<DataOrException<ApiResponse, Boolean, Exception>> =
         mutableStateOf(DataOrException())
+//    val apiResponse: State<DataOrException<ApiResponse, Boolean, Exception>> = _apiResponse
+
+    val isData = mutableStateOf(false)
+
+    private val tokenOrCookie = mutableStateOf("")
+
+    private var firstTimeLogIn: Boolean? = null
+    private var logInType: Boolean? = null
+
+    val allSet = mutableStateOf(false)
 
     init {
-//        cookieManager.put("".toUri(), mapOf("Set-Cookie" to mutableListOf("2d4a8860474a07762ff477eb6bd31552")))
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            delay(500) // give time to write before reading data if logging in for first time
+            readTokenOrCookie()
+        }
+    }
+
+    private suspend fun updateFirstTimeLoginSate() {
+        dataStoreOperation.saveFirstTimeLoginState(false)
+        Log.d("call 3", "saveFirstTimeLoginState")
+    }
+
+    private suspend fun readTokenOrCookie() {
+        dataStoreOperation.readJWTTokenOrSession().collect {
+            tokenOrCookie.value = it
+            Log.d("call 1", it)
+            readFirstTimeLoginState()
+        }
+    }
+
+    private suspend fun readFirstTimeLoginState() {
+        dataStoreOperation.readFirstTimeLoginState().collect {
+            Log.d("call 2", it.toString())
+            firstTimeLogIn = it
+            readLogInType()
+        }
+    }
+
+    private suspend fun readLogInType() {
+        dataStoreOperation.readAuthType().collect {
+            logInType = it
+            Log.d("call 4", it.toString())
+            setCookie()
+        }
+    }
 
 
-
-
-            delay(500)
-            dataStoreOperation.readFirstTimeLoginState().collect {
-//                if (it) getAll()
-                getAll()
+    fun getAll() {
+        if (firstTimeLogIn != null) {
+            if (firstTimeLogIn!!) {
+                getAllData(tokenOrCookie.value)
             }
         }
     }
 
-    fun temp() {
-        viewModelScope.launch {
-            getAll()
+    private fun setCookie() {
+        if (logInType != null) {
+            if (logInType!!) {
+                cookieManager.put(
+                    URI.create(BASE_URL),
+                    mapOf("Set-Cookie" to mutableListOf(tokenOrCookie.value))
+                )
+            }
+            Log.d("call 5", "cookie set")
         }
     }
 
-    private suspend fun getAll() {
-        dataStoreOperation.readJWTToken().collect {
-            Log.d("cookies", cookieManager.cookieStore.cookies.toString()) // TODO cookie
-            Log.d("cookies", cookieManager.cookieStore.urIs.toString())
-            apiResponse.value = networkRepository.getAll(token = "USER_SESSION=a1055a90d468b3924459d8f99eee9814")
-            dataStoreOperation.saveFirstTimeLoginState(false)
-            Log.d("apiResponse", apiResponse.value.data?.listOfNote.toString())
+
+    private fun getAllData(token: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _apiResponse.value = networkRepository.getAll("Bearer $token")
+            Log.d("homeViewModel apiResponse", _apiResponse.value.data?.listOfNote.toString())
+
+            updateFirstTimeLoginSate()
+            if (firstTimeLogIn!!) allSet.value = true
+
+            val temp = _apiResponse.value.data?.listOfNote
+
+            if (!temp.isNullOrEmpty()) {
+                isData.value = true
+            }
         }
     }
 }

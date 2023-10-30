@@ -9,6 +9,9 @@ interface DataStoreOperation {
     suspend fun saveFirstTimeLoginState(firstLogInState: Boolean)
     fun readFirstTimeLoginState(): Flow<Boolean>
 
-    suspend fun saveUpdateJWTToken(jwtToken: String)
-    fun readJWTToken(): Flow<String>
+    suspend fun saveUpdateJWTTokenOrSession(jwtToken: String)
+    fun readJWTTokenOrSession(): Flow<String>
+
+    suspend fun saveAuthenticationType(authType: Boolean)
+    fun readAuthType(): Flow<Boolean>
 }

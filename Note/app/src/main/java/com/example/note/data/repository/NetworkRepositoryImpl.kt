@@ -26,8 +26,7 @@ class NetworkRepositoryImpl @Inject constructor(
     override suspend fun getAll(token: String): DataOrException<ApiResponse, Boolean, Exception> {
         val result = try {
             Log.d("error getting all data: ", "called")
-
-            noteApi.getAllGoogle(token = token)
+            noteApi.getAll(token = token)
         } catch (e: Exception) {
             Log.d("error getting all data: ", e.message.toString())
             return DataOrException(e = e)

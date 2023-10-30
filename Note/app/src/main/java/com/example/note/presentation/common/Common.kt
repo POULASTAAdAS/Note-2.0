@@ -1,5 +1,6 @@
 package com.example.note.presentation.common
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -16,10 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -32,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -92,6 +97,28 @@ fun LoginTextField(
             ) { Icon(painter = icon, contentDescription = null) }
         }
     )
+}
+
+@Composable
+fun DefaultIconButton(
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Rounded.Search,
+    onClick: () -> Unit
+) {
+    AnimatedVisibility(visible = true) {
+        IconButton(
+            onClick = onClick,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                contentColor = MaterialTheme.colorScheme.inversePrimary
+            ),
+            modifier = Modifier.then(modifier)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+            )
+        }
+    }
 }
 
 

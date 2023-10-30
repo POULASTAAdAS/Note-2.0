@@ -4,10 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.example.note.presentation.screen.home.HomeScreen
 import com.example.note.presentation.screen.home.HomeViewModel
 import com.example.note.presentation.screen.login.LoginScreen
@@ -28,13 +26,14 @@ fun SetUpNavGraph(
             val loginViewModel: LoginViewModel = hiltViewModel()
 
             LaunchedEffect(key1 = Unit) {
-                delay(400)
+                delay(400) // give time to read login State
                 keepSplashOpened()
             }
-            LoginScreen(loginViewModel = loginViewModel,
+            LoginScreen(
+                loginViewModel = loginViewModel,
                 navigateToHome = {
                     navHostController.popBackStack()
-                    navHostController.navigate("home_screen")
+                    navHostController.navigate(Screens.Home.path)
                     keepSplashOpened()
                 }
             )

@@ -7,8 +7,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.note.domain.repository.DataStoreOperation
+import com.example.note.utils.Constants.AUTH_TYPE_KEY
 import com.example.note.utils.Constants.PREFERENCES_FIRST_TIME_SIGNED_IN_KEY
-import com.example.note.utils.Constants.PREFERENCES_JWT_TOKEN_KEY
+import com.example.note.utils.Constants.PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY
 import com.example.note.utils.Constants.PREFERENCES_SIGNED_IN_KEY
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -21,8 +22,9 @@ class DataStoreOperationImpl @Inject constructor(
 ) : DataStoreOperation {
     private object PreferencesKey {
         val signedInKey = booleanPreferencesKey(name = PREFERENCES_SIGNED_IN_KEY)
-        val jwtTokenKey = stringPreferencesKey(name = PREFERENCES_JWT_TOKEN_KEY)
         val firstLogInState = booleanPreferencesKey(name = PREFERENCES_FIRST_TIME_SIGNED_IN_KEY)
+        val authType = booleanPreferencesKey(name = AUTH_TYPE_KEY)
+        val jwtTokenKey = stringPreferencesKey(name = PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY) // if true google auth else jwt
     }
 
     override suspend fun saveUpdateSignedInState(signedInState: Boolean) {
@@ -45,14 +47,13 @@ class DataStoreOperationImpl @Inject constructor(
         }
 
 
-    override suspend fun saveUpdateJWTToken(jwtToken: String) {
+    override suspend fun saveUpdateJWTTokenOrSession(jwtToken: String) {
         dataStore.edit {
-
             it[PreferencesKey.jwtTokenKey] = jwtToken
         }
     }
 
-    override fun readJWTToken(): Flow<String> = dataStore.data
+    override fun readJWTTokenOrSession(): Flow<String> = dataStore.data
         .catch { e ->
             if (e is IOException) emit(emptyPreferences())
             else throw e
@@ -79,5 +80,24 @@ class DataStoreOperationImpl @Inject constructor(
         }.map {
             val firstTimeSignedInState = it[PreferencesKey.firstLogInState] ?: false
             firstTimeSignedInState
+        }
+
+    override suspend fun saveAuthenticationType(authType: Boolean) {
+        dataStore.edit {
+            it[PreferencesKey.authType] = authType
+        }
+    }
+
+    override fun readAuthType(): Flow<Boolean> = dataStore
+        .data
+        .catch { e ->
+            if (e is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw e
+            }
+        }.map {
+            val authType = it[PreferencesKey.authType] ?: false
+            authType
         }
 }

@@ -27,13 +27,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.net.CookieManager
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val application: Application,
     private val networkRepository: NetworkRepository,
-    private val dataStoreOperation: DataStoreOperation
+    private val dataStoreOperation: DataStoreOperation,
+    private val cookieManager: CookieManager
 ) : ViewModel() {
     val googleButtonLoadingState = mutableStateOf(false)
     val basicLoginLoadingState = mutableStateOf(false)
@@ -54,7 +56,7 @@ class LoginViewModel @Inject constructor(
 
     val loggedInState = mutableStateOf(false)
 
-    private var loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
+    private val loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
         mutableStateOf(DataOrException())
 
 
@@ -67,8 +69,8 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private suspend fun saveJWTToken(jwtToken: String) {
-        dataStoreOperation.saveUpdateJWTToken(jwtToken = jwtToken)
+    private suspend fun saveJWTTokenOrCookie(jwtToken: String) {
+        dataStoreOperation.saveUpdateJWTTokenOrSession(jwtToken = jwtToken)
     }
 
     fun changeGoogleButtonLoadingState(value: Boolean) {
@@ -129,12 +131,16 @@ class LoginViewModel @Inject constructor(
                 )
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
+                dataStoreOperation.saveAuthenticationType(false)
                 loggedInState.value = true
 
                 Log.d("CredentialTest", "saving successful")
             } catch (e: CreateCredentialCancellationException) {
-                Log.d("CredentialTest", "user canceled save")
                 loggedInState.value = true
+                dataStoreOperation.saveUpdateSignedInState(true)
+                dataStoreOperation.saveFirstTimeLoginState(true)
+                dataStoreOperation.saveAuthenticationType(false)
+                Log.d("CredentialTest", "user canceled save")
             } catch (e: CreateCredentialException) {
                 Log.d("CredentialTest", " ${e.message}")
             } catch (e: Exception) {
@@ -145,9 +151,7 @@ class LoginViewModel @Inject constructor(
 
     private suspend fun getCredential(activity: Activity): PasswordCredential? {
         try {
-            val getCredRequest = GetCredentialRequest(
-                listOf(GetPasswordOption())
-            )
+            val getCredRequest = GetCredentialRequest(listOf(GetPasswordOption()))
 
             //Show the user a dialog allowing them to pick a saved credential
             val credentialResponse = credentialManager.getCredential(
@@ -167,7 +171,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun test(credential: PasswordCredential) {
+    private fun getSignInWithSavedCredentialJWTToken(credential: PasswordCredential) {
         viewModelScope.launch {
             loginResponse.value =
                 networkRepository.loginSignUp( // TODO signInWithSavedCredential server req to get jwt token
@@ -179,7 +183,9 @@ class LoginViewModel @Inject constructor(
                 )
 
             if (loginResponse.value.data?.token != null) {
-                dataStoreOperation.saveUpdateJWTToken(loginResponse.value.data!!.token!!)
+                val token = loginResponse.value.data!!.token!!
+
+                saveJWTTokenOrCookie(token)
             }
         }
     }
@@ -190,10 +196,11 @@ class LoginViewModel @Inject constructor(
             try {
                 val credential = getCredential(activity) ?: return@launch
 
-                test(credential = credential)
+                getSignInWithSavedCredentialJWTToken(credential = credential)
                 signedInPasswordCredential.value = credential
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
+                dataStoreOperation.saveAuthenticationType(false)
                 loggedInState.value = true
             } catch (e: Exception) {
                 Log.d("CredentialTest", "error getting credential" + e.message.toString())
@@ -231,16 +238,17 @@ class LoginViewModel @Inject constructor(
             if (loginResponse.value.data?.token != null) {
                 val jwtToken = loginResponse.value.data!!.token!!
 
-                if (loginResponse.value.data!!.userExists!! == UserExists.YES_SAME_PASSWORD.name) {
-                    saveJWTToken(jwtToken)
-
+                if (
+                    loginResponse.value.data!!.userExists!! == UserExists.YES_SAME_PASSWORD.name ||
+                    loginResponse.value.data!!.userExists!! == UserExists.NO.name
+                ) {
+                    saveJWTTokenOrCookie(jwtToken)
                     startBasicLoginProcess(
                         activity = activity,
                         credential = credential
                     )
                 } else {
                     // TODO UserExists.YES_DIFF_PASSWORD
-
                 }
             } else {
                 unableToLogin.value = true
@@ -251,6 +259,15 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+
+    private suspend fun saveCookie() {
+        try {
+            val cookie = cookieManager.cookieStore.cookies[0].toString()
+            saveJWTTokenOrCookie(cookie)
+        } catch (e: Exception) {
+            Log.d("error saving session data", e.message.toString())
+        }
+    }
 
     fun googleLoginSignUp(
         tokenId: String
@@ -267,8 +284,10 @@ class LoginViewModel @Inject constructor(
             )
 
             if (loginResponse.value.data?.googleLogIn != null && loginResponse.value.data?.googleLogIn == true) {
+                dataStoreOperation.saveAuthenticationType(true)
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
+                saveCookie()
                 loggedInState.value = true
             } else {
                 unableToLogin.value = true

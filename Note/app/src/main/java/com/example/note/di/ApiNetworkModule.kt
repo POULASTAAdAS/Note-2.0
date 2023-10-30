@@ -32,7 +32,7 @@ object ApiNetworkModule {
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
             .connectTimeout(15, TimeUnit.SECONDS)
-            .cookieJar(JavaNetCookieJar(cookieManager))  // Temp()
+            .cookieJar(JavaNetCookieJar(cookieManager))
             .build()
 
     @Provides
