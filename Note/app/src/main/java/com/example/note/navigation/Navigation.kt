@@ -25,10 +25,6 @@ fun SetUpNavGraph(
         composable(route = Screens.Login.path) {
             val loginViewModel: LoginViewModel = hiltViewModel()
 
-            LaunchedEffect(key1 = Unit) {
-                delay(400) // give time to read login State
-                keepSplashOpened()
-            }
             LoginScreen(
                 loginViewModel = loginViewModel,
                 navigateToHome = {

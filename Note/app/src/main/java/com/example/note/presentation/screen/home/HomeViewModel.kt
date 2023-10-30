@@ -3,6 +3,7 @@ package com.example.note.presentation.screen.home
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.focus.FocusRequester
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.note.data.remote.DataOrException
@@ -110,5 +111,32 @@ class HomeViewModel @Inject constructor(
                 isData.value = true
             }
         }
+    }
+
+    //-------------------------------------------------------------------------------
+
+    val searchText = mutableStateOf("")
+
+    val noteSelected = mutableStateOf(false) // to delete
+    val searchEnabled = mutableStateOf(false)
+
+    fun changeSearchText(text: String) {
+        searchText.value = text
+    }
+
+    fun searchIconClicked() {
+        searchEnabled.value = !searchEnabled.value
+    }
+
+    fun clearClicked() {
+        if (noteSelected.value)
+            TODO()
+        else
+            if (searchText.value.isEmpty()) searchIconClicked()
+            else searchText.value = ""
+    }
+
+    fun searchClicked() {
+        // TODO local database search
     }
 }

@@ -40,6 +40,7 @@ fun HomeScreenContent(
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
@@ -52,12 +53,18 @@ private fun PreviewLight() {
             HomeTopBar(
                 isData = false,
                 noteSelected = false,
-                searchIconClicked = {
+                enableSearch = {
                 },
                 deleteClicked = {
                 },
                 clearClicked = {
-                }
+                },
+                searchEnabled = true,
+                searchText = "",
+                searchTextChange = {
+
+                }, searchClicked = {},
+                threeDotClicked = {}
             )
         },
         floatingActionButton = {
@@ -86,12 +93,19 @@ private fun PreviewDark() {
             HomeTopBar(
                 isData = false,
                 noteSelected = false,
-                searchIconClicked = {
+                enableSearch = {
                 },
                 deleteClicked = {
                 },
                 clearClicked = {
-                }
+                },
+                searchEnabled = true,
+                searchText = "",
+                searchTextChange = {
+
+                },
+                searchClicked = {},
+                threeDotClicked = {}
             )
         },
         floatingActionButton = {

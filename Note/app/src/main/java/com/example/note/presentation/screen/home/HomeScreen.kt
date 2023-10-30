@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,14 +20,27 @@ fun HomeScreen(
     val isData by homeViewModel.isData
 
     val haptic = LocalHapticFeedback.current
+    val focsManager = LocalFocusManager.current
+
+    val searchText by homeViewModel.searchText
+    val searchEnabled by homeViewModel.searchEnabled
 
     Scaffold(
         topBar = {
             HomeTopBar(
                 isData = isData,
                 noteSelected = false,
-                searchIconClicked = {
-                    // TODO
+                searchEnabled = searchEnabled,
+                searchText = searchText,
+                searchTextChange = {
+                    homeViewModel.changeSearchText(it)
+                },
+                searchClicked = {
+                    homeViewModel.searchClicked()
+                    focsManager.clearFocus()
+                },
+                enableSearch = {
+                    homeViewModel.searchIconClicked()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 deleteClicked = {
@@ -34,6 +48,11 @@ fun HomeScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 clearClicked = {
+                    // TODO
+                    homeViewModel.clearClicked()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                },
+                threeDotClicked = {
                     // TODO
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 }

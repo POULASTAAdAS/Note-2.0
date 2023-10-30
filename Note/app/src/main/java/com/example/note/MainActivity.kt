@@ -17,14 +17,10 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private var keepSplashOpened = true
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        installSplashScreen().setKeepOnScreenCondition {
-            keepSplashOpened
-        }
+        installSplashScreen()
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -40,7 +36,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = Screens.Login.path,
                         navHostController = navHostController,
                         keepSplashOpened = {
-                            keepSplashOpened = false
+//                            keepSplashOpened = false
                         }
                     )
                 }

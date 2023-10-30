@@ -11,6 +11,7 @@ data class Note(
     val content: String? = null,
     val date: String? = null,
     val updateDate: String? = null,
-    val opened: Int? = null,
+    val edited: Int? = null,
+    val pinned: Boolean? = null,
     val syncState: Boolean = false
 )

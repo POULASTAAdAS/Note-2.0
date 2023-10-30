@@ -111,11 +111,11 @@ fun LoginScreen(
         }
     }
 
-    LaunchedEffect(key1 = Unit) {// open app any other time
+    LaunchedEffect(key1 = Unit) {// logging in with old jwt auth account
         loginViewModel.signInWithSavedCredential(activity)
     }
 
-    LaunchedEffect(key1 = loggedInState) { // first time login
+    LaunchedEffect(key1 = loggedInState) { // creating new jwt auth account
         if (loggedInState) navigateToHome()
     }
 }
