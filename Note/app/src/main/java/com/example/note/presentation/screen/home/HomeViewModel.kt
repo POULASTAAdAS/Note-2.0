@@ -14,6 +14,7 @@ import com.example.note.utils.Constants.BASE_URL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.net.CookieManager
 import java.net.URI
@@ -114,6 +115,14 @@ class HomeViewModel @Inject constructor(
     }
 
     //-------------------------------------------------------------------------------
+
+    fun temp() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val temp = networkRepository.getAll("Bearer ${tokenOrCookie.value}")
+            Log.d("data", temp.data?.listOfNote.toString())
+        }
+    }
+
 
     val searchText = mutableStateOf("")
 
