@@ -55,20 +55,9 @@ class LoginViewModel @Inject constructor(
     private val credentialManager by lazy { CredentialManager.create(application) }
     val signedInPasswordCredential = MutableStateFlow<PasswordCredential?>(null)
 
-    val loggedInState = mutableStateOf(false)
-
     private val loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
         mutableStateOf(DataOrException())
 
-
-    init {
-        viewModelScope.launch {
-            dataStoreOperation.readSignedInState().collect {
-                loggedInState.value = it
-                Log.d("loginState.value login", it.toString())
-            }
-        }
-    }
 
     private suspend fun saveJWTTokenOrCookie(jwtToken: String) {
         dataStoreOperation.saveUpdateJWTTokenOrSession(jwtToken = jwtToken)
@@ -133,11 +122,9 @@ class LoginViewModel @Inject constructor(
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
                 dataStoreOperation.saveAuthenticationType(false)
-                loggedInState.value = true
 
                 Log.d("CredentialTest", "saving successful")
             } catch (e: CreateCredentialCancellationException) {
-                loggedInState.value = true
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
                 dataStoreOperation.saveAuthenticationType(false)
@@ -202,7 +189,6 @@ class LoginViewModel @Inject constructor(
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
                 dataStoreOperation.saveAuthenticationType(false)
-                loggedInState.value = true
             } catch (e: Exception) {
                 Log.d("CredentialTest", "error getting credential" + e.message.toString())
             }
@@ -289,7 +275,6 @@ class LoginViewModel @Inject constructor(
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
                 saveCookie()
-                loggedInState.value = true
             } else {
                 unableToLogin.value = true
             }

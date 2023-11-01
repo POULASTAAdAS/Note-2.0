@@ -14,8 +14,7 @@ import com.example.note.presentation.common.singIn
 
 @Composable
 fun LoginScreen(
-    loginViewModel: LoginViewModel,
-    navigateToHome: () -> Unit
+    loginViewModel: LoginViewModel
 ) {
     val googleButtonLoadingState by loginViewModel.googleButtonLoadingState
     val basicLoginLoadingState by loginViewModel.basicLoginLoadingState
@@ -31,11 +30,10 @@ fun LoginScreen(
 
     val unableToLogin by loginViewModel.unableToLogin
 
+    val credential by loginViewModel.signedInPasswordCredential.collectAsState()
+    
     val focusManager = LocalFocusManager.current
     val activity = LocalContext.current as Activity
-    val credential by loginViewModel.signedInPasswordCredential.collectAsState()
-
-    val loggedInState by loginViewModel.loggedInState
 
     LoginScreenContent(
         loadingState = googleButtonLoadingState,
@@ -105,7 +103,7 @@ fun LoginScreen(
         if (unableToLogin) {
             Toast.makeText(
                 activity,
-                "Server is not up",
+                "server is down",
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -113,10 +111,6 @@ fun LoginScreen(
 
     LaunchedEffect(key1 = Unit) {// logging in with old jwt auth account
         loginViewModel.signInWithSavedCredential(activity)
-    }
-
-    LaunchedEffect(key1 = loggedInState) { // creating new jwt auth account
-        if (loggedInState) navigateToHome()
     }
 }
 

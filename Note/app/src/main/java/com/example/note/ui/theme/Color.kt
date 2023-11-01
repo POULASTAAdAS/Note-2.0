@@ -2,6 +2,7 @@ package com.example.note.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 
 val PurpleGrey80 = Color(0xFFCCC2DC)
@@ -18,6 +19,9 @@ val inverse_light_primary = Color(0xFF000020)
 
 val light_place_holder = Color.LightGray
 val dark_place_holder = Color.Gray
+
+@Stable
+val marker_color = Color(0xFFEEB300)
 
 
 val forgot_text = Color(0xFF0096DA)

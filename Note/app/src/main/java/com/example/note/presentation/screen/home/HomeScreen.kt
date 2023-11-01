@@ -18,7 +18,6 @@ fun HomeScreen(
     navigateToSelectedScreen: (Int) -> Unit,
     navigateToNew: () -> Unit
 ) {
-    val allSet by homeViewModel.allSet
     val isData by homeViewModel.isData
 
     val haptic = LocalHapticFeedback.current
@@ -27,8 +26,8 @@ fun HomeScreen(
     val searchText by homeViewModel.searchText
     val searchEnabled by homeViewModel.searchEnabled
 
-    LaunchedEffect(key1 = Unit){
-        Log.d("tag" , "called")
+    LaunchedEffect(key1 = Unit) {
+        homeViewModel.initialSet()
     }
 
     Scaffold(
@@ -68,8 +67,7 @@ fun HomeScreen(
             AnimatedVisibility(visible = true) { // TODO animation
                 FloatingNewButton {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-//                    navigateToNew()
-                    homeViewModel.temp()
+                    navigateToNew()
                 }
             }
         }
@@ -77,11 +75,5 @@ fun HomeScreen(
         HomeScreenContent(
             paddingValues = it
         )
-    }
-
-    LaunchedEffect(key1 = allSet) {
-        if (allSet) {
-            homeViewModel.getAll()
-        }
     }
 }

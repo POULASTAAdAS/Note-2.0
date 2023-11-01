@@ -2,19 +2,20 @@ package com.example.note.presentation.screen.home
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.focus.FocusRequester
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.note.data.remote.DataOrException
 import com.example.note.domain.model.ApiResponse
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
+import com.example.note.navigation.Screens
 import com.example.note.utils.Constants.BASE_URL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.net.CookieManager
 import java.net.URI
@@ -27,9 +28,28 @@ class HomeViewModel @Inject constructor(
     private val cookieManager: CookieManager
 ) : ViewModel() {
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading get() = _isLoading.asStateFlow()
+
+    private val _startDestination = MutableStateFlow<String?>(null)
+    val startDestination get() = _startDestination.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            dataStoreOperation.readSignedInState().collect {
+                _startDestination.value = if (it) Screens.Home.path else Screens.Login.path
+                _isLoading.value = false
+                Log.d("readSignedInState", it.toString())
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------------------
+    private val appOpened = mutableStateOf(true)
+
     private val _apiResponse: MutableState<DataOrException<ApiResponse, Boolean, Exception>> =
         mutableStateOf(DataOrException())
-//    val apiResponse: State<DataOrException<ApiResponse, Boolean, Exception>> = _apiResponse
+    val apiResponse: State<DataOrException<ApiResponse, Boolean, Exception>> get() = _apiResponse
 
     val isData = mutableStateOf(false)
 
@@ -38,14 +58,14 @@ class HomeViewModel @Inject constructor(
     private var firstTimeLogIn: Boolean? = null
     private var logInType: Boolean? = null
 
-    val allSet = mutableStateOf(false)
-
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            delay(500) // give time to write before reading data if logging in for first time
-            readTokenOrCookie()
+    fun initialSet() {
+        if (appOpened.value) {
+            viewModelScope.launch(Dispatchers.IO) {
+                readTokenOrCookie()
+            }
         }
     }
+
 
     private suspend fun updateFirstTimeLoginSate() {
         dataStoreOperation.saveFirstTimeLoginState(false)
@@ -77,7 +97,7 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    fun getAll() {
+    private fun getAll() {
         if (firstTimeLogIn != null) {
             if (firstTimeLogIn!!) {
                 getAllData(tokenOrCookie.value)
@@ -94,9 +114,9 @@ class HomeViewModel @Inject constructor(
                 )
             }
             Log.d("call 5", "cookie set")
+            getAll()
         }
     }
-
 
     private fun getAllData(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -104,30 +124,31 @@ class HomeViewModel @Inject constructor(
             Log.d("homeViewModel apiResponse", _apiResponse.value.data?.listOfNote.toString())
 
             updateFirstTimeLoginSate()
-            if (firstTimeLogIn!!) allSet.value = true
 
             val temp = _apiResponse.value.data?.listOfNote
-
-            if (!temp.isNullOrEmpty()) {
-                isData.value = true
-            }
+            if (!temp.isNullOrEmpty()) isData.value = true
         }
     }
 
     //-------------------------------------------------------------------------------
-
-    fun temp() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val temp = networkRepository.getAll("Bearer ${tokenOrCookie.value}")
-            Log.d("data", temp.data?.listOfNote.toString())
-        }
-    }
-
-
     val searchText = mutableStateOf("")
 
     val noteSelected = mutableStateOf(false) // to delete
     val searchEnabled = mutableStateOf(false)
+
+
+    val heading = mutableStateOf("")
+    val content = mutableStateOf("")
+
+
+    fun changeHeadingText(text: String) {
+        heading.value = text
+    }
+
+    fun changeContentText(text: String) {
+        content.value = text
+    }
+
 
     fun changeSearchText(text: String) {
         searchText.value = text

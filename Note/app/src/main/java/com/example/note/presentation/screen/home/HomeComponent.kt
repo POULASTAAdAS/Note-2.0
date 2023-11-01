@@ -93,13 +93,16 @@ fun HomeTopBar(
                                 searchClicked()
                             }
                         ),
-                        colors = TextFieldDefaults.textFieldColors(
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
                             cursorColor = MaterialTheme.colorScheme.inversePrimary,
-                            focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
-                            containerColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
                             focusedIndicatorColor = Color.Transparent,
-                            placeholderColor = place_holder
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
+                            unfocusedPlaceholderColor = place_holder,
+                            focusedPlaceholderColor = place_holder
                         )
                     )
                 }

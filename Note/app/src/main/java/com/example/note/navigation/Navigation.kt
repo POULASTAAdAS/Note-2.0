@@ -16,7 +16,6 @@ fun SetUpNavGraph(
     homeViewModel: HomeViewModel,
     startDestination: String,
     navHostController: NavHostController,
-    keepSplashOpened: () -> Unit
 ) {
     NavHost(
         navController = navHostController,
@@ -24,15 +23,7 @@ fun SetUpNavGraph(
     ) {
         composable(route = Screens.Login.path) {
             val loginViewModel: LoginViewModel = hiltViewModel()
-
-            LoginScreen(
-                loginViewModel = loginViewModel,
-                navigateToHome = {
-                    navHostController.popBackStack()
-                    navHostController.navigate(Screens.Home.path)
-                    keepSplashOpened()
-                }
-            )
+            LoginScreen(loginViewModel = loginViewModel)
         }
 
         composable(route = Screens.Home.path) {
@@ -48,7 +39,9 @@ fun SetUpNavGraph(
         }
 
         composable(route = Screens.New.path) {
-            NewScreen()
+            NewScreen(
+                homeViewModel = homeViewModel
+            )
         }
     }
 }

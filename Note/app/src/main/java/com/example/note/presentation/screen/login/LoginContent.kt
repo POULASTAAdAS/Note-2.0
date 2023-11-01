@@ -157,7 +157,8 @@ fun LoginScreenContent(
 
         Column(
             modifier = Modifier
-                .aspectRatio(1.2f),
+                .aspectRatio(1.2f)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.Bottom
         ) {
             GoogleLoginButton(
