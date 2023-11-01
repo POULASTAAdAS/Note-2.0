@@ -2,6 +2,7 @@ package com.example.note.presentation.screen.neww
 
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.example.note.presentation.screen.data.DataContent
@@ -20,9 +21,13 @@ fun NewScreen(
 
     val haptic = LocalHapticFeedback.current
 
+    LaunchedEffect(key1 = Unit) {
+        homeViewModel.clearHeading()
+    }
+
     Scaffold(
         topBar = {
-
+            // TODO take content
         },
         content = { paddingValues ->
             DataContent(
@@ -33,9 +38,6 @@ fun NewScreen(
                 content = content,
                 onHeadingChange = {
                     homeViewModel.changeHeadingText(it)
-                },
-                onContentChange = {
-                    homeViewModel.changeContentText(it)
                 }
             )
         }

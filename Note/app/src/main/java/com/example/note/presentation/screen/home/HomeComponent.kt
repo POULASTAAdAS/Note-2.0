@@ -1,7 +1,5 @@
 package com.example.note.presentation.screen.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,50 +60,47 @@ fun HomeTopBar(
         if (searchEnabled) focusRequester.requestFocus()
     }
 
-
     TopAppBar(
         title = {
             if (searchEnabled)
-                AnimatedVisibility(visible = true) {
-                    TextField(
-                        value = searchText,
-                        onValueChange = searchTextChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester),
-                        singleLine = true,
-                        trailingIcon = {
-                            IconButton(onClick = clearClicked) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Clear,
-                                    contentDescription = null
-                                )
-                            }
-                        },
-                        placeholder = {
-                            Text(text = "Search...")
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Search
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onSearch = {
-                                searchClicked()
-                            }
-                        ),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            cursorColor = MaterialTheme.colorScheme.inversePrimary,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
-                            unfocusedPlaceholderColor = place_holder,
-                            focusedPlaceholderColor = place_holder
-                        )
+                TextField(
+                    value = searchText,
+                    onValueChange = searchTextChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    singleLine = true,
+                    trailingIcon = {
+                        IconButton(onClick = clearClicked) {
+                            Icon(
+                                imageVector = Icons.Rounded.Clear,
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    placeholder = {
+                        Text(text = "Search...")
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            searchClicked()
+                        }
+                    ),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.inversePrimary,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
+                        unfocusedPlaceholderColor = place_holder,
+                        focusedPlaceholderColor = place_holder
                     )
-                }
+                )
             else
                 Row(
                     modifier = Modifier

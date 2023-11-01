@@ -1,5 +1,6 @@
 package com.example.note.presentation.screen.data
 
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -38,7 +39,7 @@ fun DataScreenTextField(
         focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
         unfocusedPlaceholderColor = place_holder,
         focusedPlaceholderColor = place_holder
-    )
+    ),
 ) {
     TextField(
         value = text,

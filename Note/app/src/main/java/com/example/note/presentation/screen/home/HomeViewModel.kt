@@ -138,14 +138,18 @@ class HomeViewModel @Inject constructor(
 
 
     val heading = mutableStateOf("")
-    val content = mutableStateOf("")
+    val content = mutableStateOf("") // TODO
 
 
     fun changeHeadingText(text: String) {
         heading.value = text
     }
 
-    fun changeContentText(text: String) {
+    fun clearHeading() {
+        heading.value = ""
+    }
+
+    fun changeContentText(text: String) { // TODO
         content.value = text
     }
 

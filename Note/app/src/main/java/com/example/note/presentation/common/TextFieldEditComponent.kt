@@ -15,7 +15,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -25,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.note.R
-import com.example.note.ui.theme.dark_primary
 import com.example.note.ui.theme.forgot_text
 import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.marker_color
@@ -35,20 +36,21 @@ import com.mohamedrejeb.richeditor.model.rememberRichTextState
 
 @Composable
 fun TextFieldEditSideComponentButton(
+    color1: Color = forgot_text,
+    color2: Color = google_login_button,
+    haptic: HapticFeedback,
     icon: Painter,
-    presses: MutableState<Boolean> = remember { mutableStateOf(false) },
+    pressed: MutableState<Boolean> = remember { mutableStateOf(false) },
     color: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
         contentColor = MaterialTheme.colorScheme.primary,
-        containerColor = if (presses.value) forgot_text else google_login_button
+        containerColor = if (pressed.value) color1 else color2
     ),
-    iconPresses: (Boolean) -> Unit
+    iconPresses: () -> Unit
 ) {
-    val haptic = LocalHapticFeedback.current
-
     IconButton(
         onClick = {
-            presses.value = !presses.value
-            iconPresses(presses.value)
+            pressed.value = !pressed.value
+            iconPresses()
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         },
         colors = color
@@ -60,10 +62,50 @@ fun TextFieldEditSideComponentButton(
     }
 }
 
+@Composable
+fun TextFieldEditSideComponentLinkButton(
+    haptic: HapticFeedback,
+    icon: Painter,
+    pressed: MutableState<Boolean> = remember { mutableStateOf(false) },
+    color: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        contentColor = MaterialTheme.colorScheme.primary,
+        containerColor = if (pressed.value) forgot_text else google_login_button
+    ),
+    iconPresses: () -> Unit,
+    moveFocus: () -> Unit,
+    returnUrl: (String) -> Unit
+) {
+    IconButton(
+        onClick = {
+            pressed.value = !pressed.value
+            iconPresses()
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        },
+        colors = color
+    ) {
+        Icon(
+            painter = icon,
+            contentDescription = null,
+        )
+    }
+
+    if (pressed.value) {
+        CustomDialogBox(
+            hideDialog = {
+                pressed.value = false
+            },
+            clearFocus = moveFocus,
+            returnUrl = returnUrl
+        )
+    }
+}
+
 
 @Composable
 fun TextFieldEditSideComponent(
-    state: RichTextState
+    haptic: HapticFeedback,
+    state: RichTextState,
+    moveFocus: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -73,6 +115,7 @@ fun TextFieldEditSideComponent(
     ) {
         // ic_bold
         TextFieldEditSideComponentButton(
+            haptic = haptic,
             icon = painterResource(
                 id = R.drawable.ic_bold
             ),
@@ -87,6 +130,7 @@ fun TextFieldEditSideComponent(
 
         // ic_italic
         TextFieldEditSideComponentButton(
+            haptic = haptic,
             icon = painterResource(
                 id = R.drawable.ic_italic
             ),
@@ -100,9 +144,9 @@ fun TextFieldEditSideComponent(
         )
 
         val titleSize = MaterialTheme.typography.titleLarge.fontSize
-
         // ic_title
         TextFieldEditSideComponentButton(
+            haptic = haptic,
             icon = painterResource(
                 id = R.drawable.ic_title
             ),
@@ -117,6 +161,7 @@ fun TextFieldEditSideComponent(
 
         // ic_underline
         TextFieldEditSideComponentButton(
+            haptic = haptic,
             icon = painterResource(
                 id = R.drawable.ic_underline
             ),
@@ -131,6 +176,7 @@ fun TextFieldEditSideComponent(
 
         // ic_lineThrough
         TextFieldEditSideComponentButton(
+            haptic = haptic,
             icon = painterResource(
                 id = R.drawable.ic_linethrough
             ),
@@ -143,37 +189,32 @@ fun TextFieldEditSideComponent(
             }
         )
 
-        //
-        TextFieldEditSideComponentButton(
-            icon = painterResource(
-                id = R.drawable.ic_link
-            ),
-            iconPresses = {
-
+        // ic_link
+        TextFieldEditSideComponentLinkButton(
+            haptic = haptic,
+            icon = painterResource(id = R.drawable.ic_link),
+            iconPresses = {},
+            moveFocus = moveFocus,
+            returnUrl = {
+                state.addLink(
+                    text = it,
+                    url = it
+                )
             }
         )
 
-
-
-        val colorEnable = remember { mutableStateOf(false) }
-        // ic_color
         TextFieldEditSideComponentButton(
-            icon = painterResource(
-                id = R.drawable.ic_color
-            ),
-            iconPresses = {
-                colorEnable.value = it
-                state.toggleSpanStyle(
-                    SpanStyle(
-                        color = marker_color
-                    )
+            color1 = marker_color.copy(.5f),
+            color2 = marker_color,
+            haptic = haptic,
+            icon = painterResource(id = R.drawable.ic_color)
+        ) {
+            state.toggleSpanStyle(
+                SpanStyle(
+                    color = marker_color
                 )
-            },
-            color = IconButtonDefaults.filledIconButtonColors(
-                contentColor = dark_primary,
-                containerColor = if (colorEnable.value) marker_color.copy(.5f) else marker_color
-            ),
-        )
+            )
+        }
     }
 }
 
@@ -181,9 +222,11 @@ fun TextFieldEditSideComponent(
 @Preview
 @Composable
 private fun Preview() {
-    TextFieldEditSideComponent(
-        state = rememberRichTextState()
-    )
+    val haptic = LocalHapticFeedback.current
 
-//    ColorPicker(color = Color.Red)
+    TextFieldEditSideComponent(
+        haptic = haptic,
+        state = rememberRichTextState(),
+        moveFocus = {}
+    )
 }
