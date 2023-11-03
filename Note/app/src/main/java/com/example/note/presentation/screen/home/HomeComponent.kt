@@ -41,8 +41,10 @@ import com.example.note.ui.theme.place_holder
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(
+    userName: String = "Poulastaa",
     isData: Boolean,
     noteSelected: Boolean,
+    selectedNumber: Int = 5,
     searchEnabled: Boolean,
     searchText: String,
     searchTextChange: (String) -> Unit,
@@ -108,7 +110,7 @@ fun HomeTopBar(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "Hi Poulastaa..",
+                        text = if (noteSelected) "  $selectedNumber" else "Hi $userName...",
                         fontSize = MaterialTheme.typography.headlineSmall.fontSize,
                         modifier = Modifier.weight(1f)
                     )
@@ -178,7 +180,7 @@ private fun Preview() {
     Column {
         HomeTopBar(
             isData = false,
-            noteSelected = false,
+            noteSelected = true,
             enableSearch = {},
             deleteClicked = {},
             clearClicked = {},

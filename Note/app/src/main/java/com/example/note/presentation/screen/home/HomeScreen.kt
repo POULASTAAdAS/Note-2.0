@@ -1,18 +1,21 @@
 package com.example.note.presentation.screen.home
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import kotlinx.coroutines.delay
 
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel,
-    navigateToSelectedScreen: (Int) -> Unit,
+    navigateToDetailsScreen: (Int) -> Unit,
     navigateToNew: () -> Unit
 ) {
     val isData by homeViewModel.isData
@@ -26,6 +29,8 @@ fun HomeScreen(
     LaunchedEffect(key1 = Unit) {
         homeViewModel.initialSet()
     }
+
+    val allData by homeViewModel.allData.collectAsState()
 
     Scaffold(
         topBar = {
@@ -70,7 +75,9 @@ fun HomeScreen(
         }
     ) {
         HomeScreenContent(
-            paddingValues = it
+            paddingValues = it,
+            allData = allData,
+            navigateToDetailsScreen = navigateToDetailsScreen
         )
     }
 }

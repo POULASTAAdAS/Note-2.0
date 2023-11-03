@@ -1,5 +1,6 @@
 package com.example.note.navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -29,8 +30,8 @@ fun SetUpNavGraph(
         composable(route = Screens.Home.path) {
             HomeScreen(
                 homeViewModel = homeViewModel,
-                navigateToSelectedScreen = {
-                    navHostController.navigate("selected_screen/$it")
+                navigateToDetailsScreen = {
+//                    navHostController.navigate("selected_screen/$it")
                 },
                 navigateToNew = {
                     navHostController.navigate("new_screen/${-1}")
@@ -40,7 +41,10 @@ fun SetUpNavGraph(
 
         composable(route = Screens.New.path) {
             NewScreen(
-                homeViewModel = homeViewModel
+                homeViewModel = homeViewModel,
+                navigateBack = {
+                    navHostController.popBackStack()
+                }
             )
         }
     }

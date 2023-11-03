@@ -2,12 +2,13 @@ package com.example.note.presentation.screen.home
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.note.data.remote.DataOrException
+import com.example.note.data.repository.NoteRepositoryImpl
 import com.example.note.domain.model.ApiResponse
+import com.example.note.domain.model.Note
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
 import com.example.note.navigation.Screens
@@ -15,8 +16,10 @@ import com.example.note.utils.Constants.BASE_URL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.net.CookieManager
 import java.net.URI
 import javax.inject.Inject
@@ -25,7 +28,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val networkRepository: NetworkRepository,
     private val dataStoreOperation: DataStoreOperation,
-    private val cookieManager: CookieManager
+    private val cookieManager: CookieManager,
+    private val db: NoteRepositoryImpl
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
@@ -34,10 +38,24 @@ class HomeViewModel @Inject constructor(
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination get() = _startDestination.asStateFlow()
 
+
+    private val _allData = MutableStateFlow<List<Note>>(emptyList())
+    val allData: StateFlow<List<Note>> = _allData
+
+    fun getAllData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            db.getAllByPinnedAndUpdateDate().collect {
+                _allData.value = it
+            }
+        }
+    }
+
+
     init {
         viewModelScope.launch {
             dataStoreOperation.readSignedInState().collect {
                 _startDestination.value = if (it) Screens.Home.path else Screens.Login.path
+                getAllData()
                 _isLoading.value = false
                 Log.d("readSignedInState", it.toString())
             }
@@ -49,13 +67,13 @@ class HomeViewModel @Inject constructor(
 
     private val _apiResponse: MutableState<DataOrException<ApiResponse, Boolean, Exception>> =
         mutableStateOf(DataOrException())
-    val apiResponse: State<DataOrException<ApiResponse, Boolean, Exception>> get() = _apiResponse
+//    val apiResponse: State<DataOrException<ApiResponse, Boolean, Exception>> get() = _apiResponse
 
     val isData = mutableStateOf(false)
 
     private val tokenOrCookie = mutableStateOf("")
 
-    private var firstTimeLogIn: Boolean? = null
+    var firstTimeLogIn: Boolean? = null
     private var logInType: Boolean? = null
 
     fun initialSet() {
@@ -96,15 +114,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-
-    private fun getAll() {
-        if (firstTimeLogIn != null) {
-            if (firstTimeLogIn!!) {
-                getAllData(tokenOrCookie.value)
-            }
-        }
-    }
-
     private fun setCookie() {
         if (logInType != null) {
             if (logInType!!) {
@@ -114,23 +123,46 @@ class HomeViewModel @Inject constructor(
                 )
             }
             Log.d("call 5", "cookie set")
-            getAll()
+
+            if (firstTimeLogIn!!) getAllApiData(tokenOrCookie.value)
         }
     }
 
-    private fun getAllData(token: String) {
+    private fun getAllApiData(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _apiResponse.value = networkRepository.getAll("Bearer $token")
+
             Log.d("homeViewModel apiResponse", _apiResponse.value.data?.listOfNote.toString())
 
             updateFirstTimeLoginSate()
 
             val temp = _apiResponse.value.data?.listOfNote
-            if (!temp.isNullOrEmpty()) isData.value = true
+
+            if (!temp.isNullOrEmpty()) {
+                isData.value = true
+                storeAllToDB(temp)
+            } // todo store to local database
         }
     }
 
-    //-------------------------------------------------------------------------------
+    private fun storeAllToDB(listOfNote: List<Note>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            listOfNote.forEach {
+                try {
+                    db.addOne(it)
+                } catch (e: IOException) {
+                    Log.d("storeAllToDB exception", e.message.toString())
+                }
+            }
+            isData.value = false
+        }
+    }
+
+    // -------------------------------------------------------------------------------
+
+
+
+
     val searchText = mutableStateOf("")
 
     val noteSelected = mutableStateOf(false) // to delete
@@ -138,8 +170,6 @@ class HomeViewModel @Inject constructor(
 
 
     val heading = mutableStateOf("")
-    val content = mutableStateOf("") // TODO
-
 
     fun changeHeadingText(text: String) {
         heading.value = text
@@ -149,8 +179,8 @@ class HomeViewModel @Inject constructor(
         heading.value = ""
     }
 
-    fun changeContentText(text: String) { // TODO
-        content.value = text
+    fun getContent(text: String) { // TODO
+
     }
 
 

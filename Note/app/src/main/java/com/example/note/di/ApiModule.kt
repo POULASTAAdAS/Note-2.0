@@ -1,6 +1,8 @@
 package com.example.note.di
 
 import com.example.note.data.remote.NoteApi
+import com.example.note.data.repository.NetworkRepositoryImpl
+import com.example.note.domain.repository.NetworkRepository
 import com.example.note.utils.Constants.BASE_URL
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
@@ -18,7 +20,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ApiNetworkModule {
+object ApiModule {
     @Provides
     @Singleton
     fun provideCookieManager(): CookieManager = CookieManager()
@@ -50,4 +52,10 @@ object ApiNetworkModule {
     @Provides
     @Singleton
     fun provideNoteApi(retrofit: Retrofit): NoteApi = retrofit.create(NoteApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideNetworkRepository(
+        noteApi: NoteApi
+    ): NetworkRepository = NetworkRepositoryImpl(noteApi = noteApi)
 }

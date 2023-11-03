@@ -9,7 +9,7 @@ data class Note(
     val _id: String? = null,
     val heading: String? = null,
     val content: String? = null,
-    val date: String? = null,
+    val createDate: String? = null,
     val updateDate: String? = null,
     val edited: Int? = null,
     val pinned: Boolean? = null,

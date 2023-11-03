@@ -16,6 +16,11 @@ val light_primary = Color(0xFFECF7FC)
 val inverse_dark_primary = Color(0xFFECF7FC)
 val inverse_light_primary = Color(0xFF000020)
 
+val light_background = Color(0xFFF5FCFF)
+val dark_background = Color(0xFF000041)
+
+val non_Sync = Color(0xFFEEB300)
+
 
 val light_place_holder = Color.LightGray
 val dark_place_holder = Color.Gray
@@ -36,3 +41,6 @@ val inverse_primary
 
 val place_holder
     @Composable get() = if (isSystemInDarkTheme()) dark_place_holder else light_place_holder
+
+val background
+    @Composable get() = if (isSystemInDarkTheme()) dark_background else light_background

@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -49,20 +50,19 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
 @Composable
 fun DataContent(
     haptic: HapticFeedback,
+    focusManager: FocusManager,
     state: RichTextState,
     paddingValues: PaddingValues,
     heading: String,
-    content: String,
+    newNote: Boolean,
     onHeadingChange: (String) -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
-
     val focusRequester = remember {
         FocusRequester()
     }
 
     LaunchedEffect(key1 = Unit) {
-        if (content.isEmpty()) focusRequester.requestFocus()
+        if (newNote) focusRequester.requestFocus()
     }
 
     Column(
@@ -92,7 +92,7 @@ fun DataContent(
         )
 
         Row {
-            RichTextEditor(
+            RichTextEditor( // content
                 state = state,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.ime)
@@ -150,12 +150,15 @@ private fun PreviewDark() {
 
     val haptic = LocalHapticFeedback.current
 
+    val focusManager = LocalFocusManager.current
+
     DataContent(
         haptic = haptic,
         state = state,
+        focusManager = focusManager,
         paddingValues = PaddingValues(),
         heading = "",
-        content = "",
+        newNote = true,
         onHeadingChange = {},
     )
 }

@@ -19,14 +19,16 @@ private val DarkColorScheme = darkColorScheme(
     primary = dark_primary,
     inversePrimary = inverse_dark_primary,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+    background = dark_background
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = light_primary,
     inversePrimary = inverse_light_primary,
     secondary = PurpleGrey40,
-    tertiary = Pink40
+    tertiary = Pink40,
+    background = light_background
 )
 
 @Composable
