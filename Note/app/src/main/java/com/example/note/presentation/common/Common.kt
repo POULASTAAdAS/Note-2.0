@@ -1,5 +1,6 @@
 package com.example.note.presentation.common
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -52,7 +53,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.note.R
@@ -296,23 +296,39 @@ fun GoogleLoginButton(
 @Composable
 fun SingleCard(
     note: Note,
-    noteSelected: Boolean,
+    noteEditState: Boolean,
+    changeNoteEditState: () -> Unit,
     searchOn: Boolean,
     navigateToDetailsScreen: (Int) -> Unit,
-    selectedNoteId: (Int) -> Unit
+    selectedNoteId: (Int, Boolean) -> Unit,
+    selectAll: Boolean
 ) {
     val selected = remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = selectAll) {
+        selected.value = selectAll
+    }
+
+    LaunchedEffect(key1 = noteEditState) {
+        if (!noteEditState)
+            if (selected.value)
+                selected.value = false
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = {
-                    navigateToDetailsScreen(note._id)
+                    if (noteEditState) {
+                        selected.value = !selected.value
+                        selectedNoteId(note._id, selected.value)
+                    } else navigateToDetailsScreen(note._id)
                 },
                 onLongClick = {
-                    selected.value = !selected.value
-                    selectedNoteId(note._id)
+                    changeNoteEditState()
+                    selected.value = true
+                    selectedNoteId(note._id, selected.value)
                 }
             ),
         colors = CardDefaults.cardColors(
@@ -347,7 +363,7 @@ fun SingleCard(
                         maxLines = 1,
                         fontSize = MaterialTheme.typography.labelSmall.fontSize
                     )
-                    if (noteSelected)
+                    if (noteEditState)
                         if (selected.value)
                             FilledCircle(14.dp)
                         else EmptyCircle()
@@ -406,52 +422,3 @@ fun FilledCircle(
         }
     }
 }
-
-
-@Preview
-@Composable
-private fun Preview() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(30.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        SingleCard(
-            note = Note(
-                _id = 1,
-                heading = "heading",
-                content = "Lorem ipsum dolor sit amet, consectetur " +
-                        "adipiscing elit. Sed sit amet velit et turpis" +
-                        " dictum lacinia a a felis. Sed bibendum arcu a" +
-                        " arcu iaculis tincidunt. Sed tempus odio non tellus " +
-                        "aliquet, in dapibus quam interdum. Donec quis metus " +
-                        "nec ante varius fermentum. Integer euismod, lorem" +
-                        " at sodales posuere, sapien justo tempor justo," +
-                        " non rhoncus augue nisl nec erat. Nunc eu nisl" +
-                        " sit amet ipsum dignissim laoreet. Vestibulum nec" +
-                        " magna tincidunt, vestibulum augue eu, sollicitudin" +
-                        " metus. Integer tristique vel sapien sit amet bibendum." +
-                        " Duis rhoncus odio at eros interdum, a sagittis dui varius." +
-                        " Morbi aliquam, dolor id dictum blandit, lectus quam" +
-                        " viverra elit, at sagittis risus quam quis felis.",
-                createDate = "",
-                syncState = false,
-            ),
-            noteSelected = true,
-            searchOn = false,
-            navigateToDetailsScreen = {
-
-            },
-            selectedNoteId = {
-
-            }
-        )
-    }
-}
-
-//noteId = 1,
-//heading = "heading",
-
-//createDate = "10/10/2003",

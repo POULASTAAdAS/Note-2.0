@@ -43,8 +43,8 @@ import com.example.note.ui.theme.place_holder
 fun HomeTopBar(
     userName: String = "Poulastaa",
     isData: Boolean,
-    noteSelected: Boolean,
-    selectedNumber: Int = 5,
+    noteEditState: Boolean,
+    selectedNumber: Int,
     searchEnabled: Boolean,
     searchText: String,
     searchTextChange: (String) -> Unit,
@@ -110,7 +110,7 @@ fun HomeTopBar(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = if (noteSelected) "  $selectedNumber" else "Hi $userName...",
+                        text = if (noteEditState) "  $selectedNumber" else "Hi $userName...",
                         fontSize = MaterialTheme.typography.headlineSmall.fontSize,
                         modifier = Modifier.weight(1f)
                     )
@@ -123,14 +123,14 @@ fun HomeTopBar(
                         )
                     }
 
-                    if (noteSelected) {
+                    if (noteEditState) {
                         DefaultIconButton(
                             onClick = deleteClicked,
                             icon = Icons.Rounded.Delete
                         )
                     }
 
-                    if (noteSelected) {
+                    if (noteEditState) {
                         DefaultIconButton(
                             onClick = clearClicked,
                             icon = Icons.Rounded.Clear
@@ -180,7 +180,7 @@ private fun Preview() {
     Column {
         HomeTopBar(
             isData = false,
-            noteSelected = true,
+            noteEditState = false,
             enableSearch = {},
             deleteClicked = {},
             clearClicked = {},
@@ -190,7 +190,8 @@ private fun Preview() {
 
             },
             searchClicked = {},
-            threeDotClicked = {}
+            threeDotClicked = {},
+            selectedNumber = 5
         )
 
         FloatingNewButton {

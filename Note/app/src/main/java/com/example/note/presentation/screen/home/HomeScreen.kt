@@ -1,6 +1,5 @@
 package com.example.note.presentation.screen.home
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -10,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
-import kotlinx.coroutines.delay
 
 @Composable
 fun HomeScreen(
@@ -32,11 +30,17 @@ fun HomeScreen(
 
     val allData by homeViewModel.allData.collectAsState()
 
+    val listOfId = homeViewModel.listOfId.collectAsState()
+    val listOfIdCount by homeViewModel.listOfIdCount
+    val noteEditState by homeViewModel.noteEditState
+    val selectAll by homeViewModel.selectAll
+
     Scaffold(
         topBar = {
             HomeTopBar(
                 isData = isData,
-                noteSelected = false,
+                noteEditState = noteEditState,
+                selectedNumber = listOfIdCount,
                 searchEnabled = searchEnabled,
                 searchText = searchText,
                 searchTextChange = {
@@ -55,7 +59,6 @@ fun HomeScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 clearClicked = {
-                    // TODO
                     homeViewModel.clearClicked()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
@@ -73,11 +76,29 @@ fun HomeScreen(
                 }
             }
         }
-    ) {
+    ) { paddingValues ->
         HomeScreenContent(
-            paddingValues = it,
+            paddingValues = paddingValues,
             allData = allData,
-            navigateToDetailsScreen = navigateToDetailsScreen
+            navigateToDetailsScreen = navigateToDetailsScreen,
+            selectedNoteId = { id, selectState ->
+                if (selectState) {
+                    listOfId.value.add(id)
+                    homeViewModel.listOfIdCountAdd()
+                }
+                else {
+                    listOfId.value.remove(id)
+                    homeViewModel.listOfIdCountMinus()
+                }
+
+                if (listOfId.value.isEmpty()) homeViewModel.changeNoteEditState(false)
+            },
+            noteEditState = noteEditState,
+            changeNoteEditState = {
+                homeViewModel.changeNoteEditState(true)
+            },
+            selectAll = selectAll,
+            searchOn = false
         )
     }
 }

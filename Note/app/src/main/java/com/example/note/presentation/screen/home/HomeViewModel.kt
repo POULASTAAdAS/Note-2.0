@@ -2,6 +2,7 @@ package com.example.note.presentation.screen.home
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -160,14 +161,17 @@ class HomeViewModel @Inject constructor(
 
     // -------------------------------------------------------------------------------
 
-
-
-
     val searchText = mutableStateOf("")
 
-    val noteSelected = mutableStateOf(false) // to delete
     val searchEnabled = mutableStateOf(false)
 
+    val selectAll = mutableStateOf(false)
+    val noteEditState = mutableStateOf(false)
+    val listOfId = MutableStateFlow(ArrayList<Int>())
+    val listOfIdCount = mutableIntStateOf(0)
+
+    fun listOfIdCountAdd() = listOfIdCount.intValue++
+    fun listOfIdCountMinus() = listOfIdCount.intValue--
 
     val heading = mutableStateOf("")
 
@@ -178,6 +182,15 @@ class HomeViewModel @Inject constructor(
     fun clearHeading() {
         heading.value = ""
     }
+
+    fun selectAll() { // TODO add button on top bar
+        selectAll.value = !selectAll.value
+    }
+
+    fun changeNoteEditState(value: Boolean) {
+        noteEditState.value = value
+    }
+
 
     fun getContent(text: String) { // TODO
 
@@ -193,9 +206,11 @@ class HomeViewModel @Inject constructor(
     }
 
     fun clearClicked() {
-        if (noteSelected.value)
-            TODO()
-        else
+        if (noteEditState.value) {
+            noteEditState.value = false
+            listOfId.value.clear()
+            listOfIdCount.intValue = 0
+        } else
             if (searchText.value.isEmpty()) searchIconClicked()
             else searchText.value = ""
     }
