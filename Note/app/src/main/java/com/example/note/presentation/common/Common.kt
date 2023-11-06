@@ -65,6 +65,7 @@ import com.example.note.ui.theme.forgot_text
 import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.non_Sync
 import com.example.note.ui.theme.place_holder
+import com.example.note.utils.getAnnotatedString
 
 @Composable
 fun LoginTextField(
@@ -297,10 +298,10 @@ fun GoogleLoginButton(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SingleCard(
+fun SingleCardForGridView(
     note: Note,
     noteEditState: Boolean,
-    searchEnabled: Boolean,
+    searchOpen: Boolean,
     selectAll: Boolean,
     changeNoteEditState: () -> Unit,
     navigateToDetailsScreen: (Int) -> Unit,
@@ -308,7 +309,6 @@ fun SingleCard(
     columnClicked: () -> Unit
 ) {
     val selected = remember { mutableStateOf(false) }
-
 
     LaunchedEffect(key1 = selectAll) {
         selected.value = selectAll
@@ -328,9 +328,9 @@ fun SingleCard(
             .fillMaxWidth()
             .combinedClickable(
                 interactionSource = MutableInteractionSource(),
-                indication = if (searchEnabled) null else LocalIndication.current, // if search enabled then no ripple effect else default
+                indication = if (searchOpen) null else LocalIndication.current, // if search enabled then no ripple effect else default
                 onClick = {
-                    if (searchEnabled) columnClicked()
+                    if (searchOpen) columnClicked()
                     else {
                         if (noteEditState) {
                             selected.value = !selected.value
@@ -363,14 +363,13 @@ fun SingleCard(
                 .padding(10.dp)
         ) {
             Row {
-                if (note.pinned != null)
-                    if (note.pinned)
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_pin),
-                            contentDescription = null,
-                            modifier = Modifier.size(15.dp),
-                            tint = place_holder
-                        )
+                if (note.pinned)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_pin),
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp),
+                        tint = place_holder
+                    )
 
                 Row(
                     modifier = Modifier
@@ -381,7 +380,6 @@ fun SingleCard(
                 ) {
                     Text(
                         text = note.createDate!!.drop(2),
-                        fontWeight = FontWeight.Light,
                         modifier = Modifier
                             .padding(end = 8.dp),
                         color = place_holder,
@@ -397,23 +395,92 @@ fun SingleCard(
                 }
             }
 
-            Text(
-                text = note.heading!!,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-            )
+            if (!note.heading.isNullOrEmpty())
+                Text(
+                    text = note.heading,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                )
 
             Text(
                 text = note.content!!,
-                maxLines = if (searchEnabled) 3 else 6,
+                maxLines = 6,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.Light,
-                color = MaterialTheme.colorScheme.inversePrimary,
                 fontSize = MaterialTheme.typography.labelLarge.fontSize
             )
         }
     }
 }
+
+
+@Composable
+fun SingleCardForResearchResult(
+    searchQuery: String,
+    noteID: Int,
+    heading: String?,
+    content: String,
+    createDate: String, // TODO change in future
+    time: String = "",// TODO add to server database
+    navigateToDetailsScreen: (Int) -> Unit, // this will handle other optimization
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                navigateToDetailsScreen(noteID)
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = background,
+            contentColor = MaterialTheme.colorScheme.inversePrimary
+        ),
+        shape = RoundedCornerShape(10.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row {
+                if (!heading.isNullOrEmpty())
+                    Text(
+                        text = getAnnotatedString(
+                            text = heading,
+                            searchQuery = searchQuery,
+                            color = MaterialTheme.colorScheme.error
+                        ),
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                    )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$createDate, $time",
+                        maxLines = 1,
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize
+                    )
+                }
+            }
+
+            Text(
+                text = getAnnotatedString(
+                    text = content,
+                    searchQuery = searchQuery,
+                    color = MaterialTheme.colorScheme.error
+                ),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.Light,
+            )
+        }
+    }
+}
+
 
 @Composable
 fun EmptyCircle() {
@@ -451,7 +518,7 @@ fun FilledCircle(
 @Preview
 @Composable
 private fun Preview() {
-    SingleCard(
+    SingleCardForGridView(
         note = Note(
             heading = "heading",
             content = "this is content",
@@ -459,7 +526,7 @@ private fun Preview() {
             createDate = "23-10-10",
         ),
         noteEditState = false,
-        searchEnabled = false,
+        searchOpen = false,
         selectAll = false,
         changeNoteEditState = { /*TODO*/ },
         navigateToDetailsScreen = {},

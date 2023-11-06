@@ -1,17 +1,14 @@
 package com.example.note.presentation.screen.home
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
-import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -25,13 +22,16 @@ fun HomeScreen(
     val focsManager = LocalFocusManager.current
 
     val searchText by homeViewModel.searchText
-    val searchEnabled by homeViewModel.searchEnabled
+
+    val searchOpen by homeViewModel.searchOpen
+    val searchTriggered by homeViewModel.searchTriggered
 
     LaunchedEffect(key1 = Unit) {
         homeViewModel.initialSet()
     }
 
     val allData by homeViewModel.allData.collectAsState()
+    val searchResult by homeViewModel.searchResult.collectAsState()
 
     val listOfId = homeViewModel.listOfId.collectAsState()
     val listOfIdCount by homeViewModel.listOfIdCount
@@ -45,7 +45,7 @@ fun HomeScreen(
                 isData = isData,
                 noteEditState = noteEditState,
                 selectedNumber = listOfIdCount,
-                searchEnabled = searchEnabled,
+                searchOpen = searchOpen,
                 searchText = searchText,
                 selectAll = selectAll,
                 selectAllClicked = {
@@ -86,16 +86,20 @@ fun HomeScreen(
         }
     ) { paddingValues ->
         HomeScreenContent(
+            searchQuery = searchText,
             paddingValues = paddingValues,
             allData = allData,
-            searchEnabled = searchEnabled,
+            searchResult = searchResult,
+            searchOpen = searchOpen,
+            searchTriggered = searchTriggered,
             selectAll = selectAll,
             noteEditState = noteEditState,
             navigateToDetailsScreen = {
                 navigateToDetailsScreen(it)
+                homeViewModel.navigatedToDetailsScreenCleanUp()
             },
             selectedNoteId = { id, selectState ->
-                homeViewModel.handleAddOrRemoveOfId(id, selectState)
+                homeViewModel.handleAddOrRemoveOfIdFromListOfId(id, selectState)
                 if (listOfId.value.isEmpty()) homeViewModel.changeNoteEditState(false)
             },
             changeNoteEditState = {

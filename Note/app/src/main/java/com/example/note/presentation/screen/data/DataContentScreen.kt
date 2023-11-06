@@ -94,7 +94,7 @@ fun DataContent(
         )
 
         Row {
-            RichTextEditor( // content
+            RichTextEditor( // todo delete RichTextEditor
                 state = state,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.ime)
@@ -131,13 +131,49 @@ fun DataContent(
                 }
 
                 AnimatedVisibility(visible = show.value) {
-                    TextFieldEditSideComponent(
-                        haptic = haptic,
-                        state = state,
-                        moveFocus = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }
-                    )
+                    AnimatedVisibility(visible = show.value) {
+                        TextFieldEditSideComponent(
+                            state = state,
+                            bold = dataViewModel.bold.value,
+                            italic = dataViewModel.italic.value,
+                            title = dataViewModel.title.value,
+                            underLine = dataViewModel.underline.value,
+                            lineThrough = dataViewModel.lineThrough.value,
+                            link = dataViewModel.link.value,
+                            color = dataViewModel.color.value,
+                            toggleBold = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dataViewModel.toggleBold()
+                            },
+                            toggleItalic = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dataViewModel.toggleItalic()
+                            },
+                            toggleTitle = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dataViewModel.toggleTitle()
+                            },
+                            toggleUnderline = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dataViewModel.toggleUnderline()
+                            },
+                            toggleLineThrough = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dataViewModel.toggleLineThrough()
+                            },
+                            toggleLink = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dataViewModel.toggleLink()
+                            },
+                            toggleColor = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dataViewModel.toggleColor()
+                            },
+                            moveFocus = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }
+                        )
+                    }
                 }
             }
         }

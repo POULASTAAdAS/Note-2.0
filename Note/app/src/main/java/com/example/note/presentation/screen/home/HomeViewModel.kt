@@ -132,13 +132,9 @@ class HomeViewModel @Inject constructor(
     private fun getAllApiData(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _apiResponse.value = networkRepository.getAll("Bearer $token")
-
-            Log.d("homeViewModel apiResponse", _apiResponse.value.data?.listOfNote.toString())
-
             updateFirstTimeLoginSate()
 
             val temp = _apiResponse.value.data?.listOfNote
-
             if (!temp.isNullOrEmpty()) {
                 isData.value = true
                 storeAllToDB(temp)
@@ -162,7 +158,10 @@ class HomeViewModel @Inject constructor(
     // -------------------------------------------------------------------------------
     val searchText = mutableStateOf("")
 
-    val searchEnabled = mutableStateOf(false)
+    val heading = mutableStateOf("")
+
+    val searchOpen = mutableStateOf(false)
+    val searchTriggered = mutableStateOf(false)
 
     val selectAll = mutableStateOf(false)
     val noteEditState = mutableStateOf(false)
@@ -170,11 +169,13 @@ class HomeViewModel @Inject constructor(
     val listOfId = MutableStateFlow(ArrayList<Int>())
     val listOfIdCount = mutableIntStateOf(0)
 
+    var searchResult = MutableStateFlow<List<Note>>(emptyList())
+        private set
 
     private fun listOfIdCountAdd() = listOfIdCount.intValue++
     private fun listOfIdCountMinus() = listOfIdCount.intValue--
 
-    fun handleAddOrRemoveOfId(id: Int, selectState: Boolean) {
+    fun handleAddOrRemoveOfIdFromListOfId(id: Int, selectState: Boolean) {
         if (!listOfId.value.contains(id)) {
             if (selectState) {
                 listOfId.value.add(id)
@@ -188,7 +189,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    val heading = mutableStateOf("")
 
     fun changeHeadingText(text: String) {
         heading.value = text
@@ -207,24 +207,44 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    fun getContentFromRichTextField(text: String) { // TODO get content and heading and save to database and server
+    fun getContentFromRichTextFieldToAdd(
+        content: String,
+        createDate: String
+    ) = viewModelScope.launch(Dispatchers.IO) {
 
+        Log.d("createDate", createDate)
+
+        db.addOne(
+            note = Note(
+                heading = heading.value,
+                content = content,
+                createDate = createDate,
+                updateDate = createDate
+            )
+        )
     }
 
 
     fun changeSearchText(text: String) {
         searchText.value = text
 
-        if (searchText.value.trim().isNotEmpty()) searchDatabase(searchQuery = text.trim())
+        if (searchText.value.trim().isNotEmpty()) {
+            searchTriggered.value = true
+            searchDatabase(searchQuery = text.trim())
+        } else searchTriggered.value = false
     }
 
     private fun searchDatabase(searchQuery: String) {
-        Log.d("triggered", "text: $searchQuery")
+        viewModelScope.launch(Dispatchers.IO) {
+            db.searchNotes(searchQuery = "%$searchQuery%").collect {
+                searchResult.value = it
+            }
+        }
     }
 
 
     fun searchIconClicked() {
-        searchEnabled.value = !searchEnabled.value
+        searchOpen.value = !searchOpen.value
     }
 
     fun clearClicked() {
@@ -233,7 +253,69 @@ class HomeViewModel @Inject constructor(
             listOfId.value.clear()
             listOfIdCount.intValue = 0
         } else
-            if (searchText.value.isEmpty()) searchIconClicked()
-            else searchText.value = ""
+            if (searchText.value.isEmpty()) {
+                searchIconClicked()
+                searchTriggered.value = false
+            } else searchText.value = ""
+    }
+
+    fun navigatedToDetailsScreenCleanUp() {
+        if (searchTriggered.value) {
+            searchResult.value = emptyList()
+            searchText.value = ""
+            searchTriggered.value = false
+            searchOpen.value = false
+        }
+    }
+
+    //---------------------------------------------------------------------------------------
+
+    private val noteID = mutableIntStateOf(0) // heading already exists
+    val content = mutableStateOf("")
+    val createDate = mutableStateOf("")
+    private val edited = mutableIntStateOf(0)
+
+    private val note = mutableStateOf(Note())
+
+    fun setNoteID(id: Int) { // first call
+        noteID.intValue = id
+        getNoteById()
+    }
+
+
+    private fun getNoteById() {
+        viewModelScope.launch(Dispatchers.IO) {
+            db.getOneById(noteID.intValue).collect {
+                heading.value = it.heading!!
+                content.value = it.content!!
+                createDate.value = it.createDate!!
+                edited.intValue = it.edited
+                Log.d("createDate", it.toString())
+                note.value = it
+            }
+        }
+    }
+
+
+    fun updateSingle(content: String) {
+        Log.d("content", content)
+        updateOne(content)
+    }
+
+    private fun updateOne(content: String) { //todo add apiReq and first add network state
+        viewModelScope.launch(Dispatchers.IO) {
+            db.updateOne(
+                note = Note(
+                    _id = noteID.intValue,
+                    heading = heading.value,
+                    content = content,
+                    createDate = note.value.createDate,
+                    updateDate = note.value.updateDate,
+                    edited = ++edited.intValue,
+                    pinned = note.value.pinned,
+                    syncState = note.value.syncState
+                )
+            )
+        }
     }
 }

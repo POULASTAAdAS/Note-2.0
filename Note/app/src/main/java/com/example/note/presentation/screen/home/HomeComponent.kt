@@ -1,6 +1,5 @@
 package com.example.note.presentation.screen.home
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.MoreVert
@@ -53,7 +51,7 @@ fun HomeTopBar(
     selectAll: Boolean,
     noteEditState: Boolean,
     selectedNumber: Int,
-    searchEnabled: Boolean,
+    searchOpen: Boolean,
     searchText: String,
     selectAllClicked: () -> Unit,
     searchTextChange: (String) -> Unit,
@@ -67,13 +65,13 @@ fun HomeTopBar(
         FocusRequester()
     }
 
-    LaunchedEffect(key1 = searchEnabled) {
-        if (searchEnabled) focusRequester.requestFocus()
+    LaunchedEffect(key1 = searchOpen) {
+        if (searchOpen) focusRequester.requestFocus()
     }
 
     TopAppBar(
         title = {
-            if (searchEnabled)
+            if (searchOpen)
                 TextField(
                     value = searchText,
                     onValueChange = searchTextChange,
@@ -205,7 +203,7 @@ private fun Preview() {
             enableSearch = {},
             deleteClicked = {},
             clearClicked = {},
-            searchEnabled = false,
+            searchOpen = false,
             selectAll = false,
             searchText = "",
             searchTextChange = {

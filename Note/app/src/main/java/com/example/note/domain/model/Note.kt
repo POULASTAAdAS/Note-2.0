@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 data class Note(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo("id")
-    val _id: Int = 0, // retrofit is changing sting apiResponse to int
+    val _id: Int = 0, // retrofit is changing string apiResponse to int
 
     val heading: String? = null,
     val content: String? = null, // TODO make content not nullable

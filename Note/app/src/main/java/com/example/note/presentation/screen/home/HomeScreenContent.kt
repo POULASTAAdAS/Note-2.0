@@ -1,6 +1,5 @@
 package com.example.note.presentation.screen.home
 
-import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,9 +7,15 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -20,18 +25,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.hapticfeedback.HapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.unit.dp
 import com.example.note.domain.model.Note
-import com.example.note.presentation.common.SingleCard
+import com.example.note.presentation.common.SingleCardForGridView
+import com.example.note.presentation.common.SingleCardForResearchResult
 
 @Composable
 fun HomeScreenContent(
+    searchQuery: String,
     paddingValues: PaddingValues,
     allData: List<Note>,
+    searchResult: List<Note>,
     noteEditState: Boolean,
-    searchEnabled: Boolean,
+    searchOpen: Boolean,
+    searchTriggered: Boolean,
     selectAll: Boolean,
     changeNoteEditState: () -> Unit,
     navigateToDetailsScreen: (Int) -> Unit,
@@ -39,7 +46,7 @@ fun HomeScreenContent(
     columnClicked: () -> Unit
 ) {
     val animateBlur by animateDpAsState(
-        targetValue = if (searchEnabled) 2.dp else 0.dp,
+        targetValue = if (searchOpen && !searchTriggered) 2.dp else 0.dp,
         label = "blur effect on screen when search on"
     )
 
@@ -55,7 +62,7 @@ fun HomeScreenContent(
             )
             .blur(radius = animateBlur)
             .clickable(
-                enabled = searchEnabled,
+                enabled = searchOpen && !searchTriggered,
                 interactionSource = MutableInteractionSource(),
                 indication = null,
                 onClick = columnClicked
@@ -64,22 +71,31 @@ fun HomeScreenContent(
         verticalArrangement = Arrangement.Center
     ) {
         if (allData.isNotEmpty())
-            ShowDataAsGrid(
-                listOfNote = allData,
-                noteEditState = noteEditState,
-                changeNoteEditState = changeNoteEditState,
-                searchEnabled = searchEnabled,
-                navigateToDetailsScreen = {
-                    navigateToDetailsScreen(it)
-                },
-                selectedNoteId = { it1, it2 ->
-                    selectedNoteId(it1, it2)
-                },
-                selectAll = selectAll,
-                columnClicked = columnClicked
-            )
+            if (searchTriggered)
+                ShowSearchResult(
+                    searchQuery = searchQuery,
+                    listOfNote = searchResult,
+                    navigateToDetailsScreen = navigateToDetailsScreen
+                )
+            else
+                ShowDataAsGrid(
+                    listOfNote = allData,
+                    noteEditState = noteEditState,
+                    changeNoteEditState = changeNoteEditState,
+                    searchOpen = searchOpen,
+                    navigateToDetailsScreen = {
+                        navigateToDetailsScreen(it)
+                    },
+                    selectedNoteId = { it1, it2 ->
+                        selectedNoteId(it1, it2)
+                    },
+                    selectAll = selectAll,
+                    columnClicked = columnClicked
+                )
         else
-            Log.d("data", allData.toString())
+            if (searchTriggered) { // todo show nothing found
+            } else { // todo show empty screen
+            }
     }
 }
 
@@ -89,7 +105,7 @@ fun ShowDataAsGrid(
     listOfNote: List<Note>,
     noteEditState: Boolean,
     changeNoteEditState: () -> Unit,
-    searchEnabled: Boolean,
+    searchOpen: Boolean,
     navigateToDetailsScreen: (Int) -> Unit,
     selectedNoteId: (Int, Boolean) -> Unit,
     selectAll: Boolean,
@@ -97,9 +113,8 @@ fun ShowDataAsGrid(
 ) {
     LazyVerticalStaggeredGrid(
         modifier = Modifier
-            .fillMaxSize()
-            .navigationBarsPadding(),
-        userScrollEnabled = !searchEnabled,
+            .fillMaxSize(),
+        userScrollEnabled = !searchOpen,
         columns = StaggeredGridCells.Fixed(2),
         contentPadding = PaddingValues(
             top = 10.dp,
@@ -116,11 +131,11 @@ fun ShowDataAsGrid(
                 it._id
             }
         ) {
-            SingleCard(
+            SingleCardForGridView(
                 note = it,
                 noteEditState = noteEditState,
                 changeNoteEditState = changeNoteEditState,
-                searchEnabled = searchEnabled,
+                searchOpen = searchOpen,
                 navigateToDetailsScreen = navigateToDetailsScreen,
                 selectedNoteId = selectedNoteId,
                 selectAll = selectAll,
@@ -131,33 +146,33 @@ fun ShowDataAsGrid(
 }
 
 
-//@Composable
-//fun ShowSearchResult(
-//    listOfNote: List<Note>,
-//    noteSelected: Boolean,
-//    searchOn: Boolean,
-//    navigateToDetailsScreen: (Int) -> Unit,
-//) {
-//    LazyColumn(
-//        modifier = Modifier.fillMaxSize(),
-//        contentPadding = PaddingValues(10.dp),
-//        verticalArrangement = Arrangement.spacedBy(10.dp)
-//    ) {
-//        items(
-//            items = listOfNote,
-//            key = {
-//                it._id
-//            }
-//        ) {
-//            SingleCard(
-//                note = it,
-//                noteEditState = noteSelected,
-//                searchOn = searchOn,
-//                navigateToDetailsScreen = navigateToDetailsScreen,
-//                selectedNoteId = { _, _ ->
-//
-//                }
-//            )
-//        }
-//    }
-//}
+@Composable
+fun ShowSearchResult(
+    listOfNote: List<Note>,
+    searchQuery: String,
+    navigateToDetailsScreen: (Int) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding(),
+        contentPadding = PaddingValues(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        items(
+            items = listOfNote,
+            key = {
+                it._id
+            }
+        ) {
+            SingleCardForResearchResult(
+                searchQuery = searchQuery,
+                noteID = it._id,
+                heading = it.heading,
+                content = it.content!!,
+                createDate = it.createDate!!.drop(2),
+                navigateToDetailsScreen = navigateToDetailsScreen
+            )
+        }
+    }
+}

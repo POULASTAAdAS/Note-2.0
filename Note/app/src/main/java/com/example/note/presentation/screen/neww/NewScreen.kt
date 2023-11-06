@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import com.example.note.presentation.screen.data.DataContent
 import com.example.note.presentation.screen.data.NoteScreenTopBar
 import com.example.note.presentation.screen.home.HomeViewModel
-import com.example.note.utils.getCurrentDtTime
+import com.example.note.utils.getCurrentDate
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 
 @Composable
@@ -36,23 +36,27 @@ fun NewScreen(
 
     LaunchedEffect(key1 = Unit) {
         homeViewModel.clearHeading()
-        localDtTime.value = getCurrentDtTime()
+        localDtTime.value = getCurrentDate()
     }
 
     Scaffold(
         topBar = {
             NoteScreenTopBar(
-                timeStamp = localDtTime.value,
+                createTime = localDtTime.value,
                 saveClicked = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     focusManager.clearFocus()
 
-                    if (state.toMarkdown().trim().isEmpty() && heading.isEmpty()) Toast.makeText(
-                        content,
-                        "nothing to save",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    else homeViewModel.getContentFromRichTextField(state.toMarkdown())
+                    if (state.toMarkdown().trim().isEmpty() && heading.isEmpty())
+                        Toast.makeText(
+                            content,
+                            "nothing to save",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    else homeViewModel.getContentFromRichTextFieldToAdd(
+                        content = state.toMarkdown(),
+                        createDate = it
+                    )
 
                     navigateBack()
                 },

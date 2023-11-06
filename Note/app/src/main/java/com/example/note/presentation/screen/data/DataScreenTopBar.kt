@@ -22,9 +22,9 @@ import com.example.note.presentation.common.DefaultIconButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreenTopBar(
-    timeStamp: String = "",
+    createTime: String = "",
     selectedNote: Boolean = false,
-    saveClicked: () -> Unit,
+    saveClicked: (String) -> Unit,
     cancelClicked: () -> Unit,
     deleteClicked: () -> Unit
 ) {
@@ -36,7 +36,7 @@ fun NoteScreenTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = timeStamp,
+                    text = createTime,
                     modifier = Modifier.weight(.8f),
                     fontSize = MaterialTheme.typography.titleSmall.fontSize,
                     textAlign = TextAlign.Center
@@ -50,7 +50,7 @@ fun NoteScreenTopBar(
                     )
 
                 DefaultIconButton(
-                    onClick = saveClicked,
+                    onClick = { saveClicked(createTime) },
                     modifier = Modifier.weight(.12f),
                     icon = Icons.Rounded.Check
                 )
