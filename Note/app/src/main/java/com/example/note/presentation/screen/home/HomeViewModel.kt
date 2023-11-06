@@ -43,7 +43,7 @@ class HomeViewModel @Inject constructor(
     private val _allData = MutableStateFlow<List<Note>>(emptyList())
     val allData: StateFlow<List<Note>> = _allData
 
-    fun getAllData() {
+    private fun getAllData() {
         viewModelScope.launch(Dispatchers.IO) {
             db.getAllByPinnedAndUpdateDate().collect {
                 _allData.value = it
@@ -74,7 +74,7 @@ class HomeViewModel @Inject constructor(
 
     private val tokenOrCookie = mutableStateOf("")
 
-    var firstTimeLogIn: Boolean? = null
+    private var firstTimeLogIn: Boolean? = null
     private var logInType: Boolean? = null
 
     fun initialSet() {
@@ -142,7 +142,7 @@ class HomeViewModel @Inject constructor(
             if (!temp.isNullOrEmpty()) {
                 isData.value = true
                 storeAllToDB(temp)
-            } // todo store to local database
+            }
         }
     }
 
@@ -160,18 +160,33 @@ class HomeViewModel @Inject constructor(
     }
 
     // -------------------------------------------------------------------------------
-
     val searchText = mutableStateOf("")
 
     val searchEnabled = mutableStateOf(false)
 
     val selectAll = mutableStateOf(false)
     val noteEditState = mutableStateOf(false)
+
     val listOfId = MutableStateFlow(ArrayList<Int>())
     val listOfIdCount = mutableIntStateOf(0)
 
-    fun listOfIdCountAdd() = listOfIdCount.intValue++
-    fun listOfIdCountMinus() = listOfIdCount.intValue--
+
+    private fun listOfIdCountAdd() = listOfIdCount.intValue++
+    private fun listOfIdCountMinus() = listOfIdCount.intValue--
+
+    fun handleAddOrRemoveOfId(id: Int, selectState: Boolean) {
+        if (!listOfId.value.contains(id)) {
+            if (selectState) {
+                listOfId.value.add(id)
+                listOfIdCountAdd()
+            }
+        } else {
+            if (!selectState) {
+                listOfId.value.remove(id)
+                listOfIdCountMinus()
+            }
+        }
+    }
 
     val heading = mutableStateOf("")
 
@@ -183,7 +198,7 @@ class HomeViewModel @Inject constructor(
         heading.value = ""
     }
 
-    fun selectAll() { // TODO add button on top bar
+    fun selectAll() {
         selectAll.value = !selectAll.value
     }
 
@@ -192,14 +207,21 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    fun getContent(text: String) { // TODO
+    fun getContentFromRichTextField(text: String) { // TODO get content and heading and save to database and server
 
     }
 
 
     fun changeSearchText(text: String) {
         searchText.value = text
+
+        if (searchText.value.trim().isNotEmpty()) searchDatabase(searchQuery = text.trim())
     }
+
+    private fun searchDatabase(searchQuery: String) {
+        Log.d("triggered", "text: $searchQuery")
+    }
+
 
     fun searchIconClicked() {
         searchEnabled.value = !searchEnabled.value
@@ -213,9 +235,5 @@ class HomeViewModel @Inject constructor(
         } else
             if (searchText.value.isEmpty()) searchIconClicked()
             else searchText.value = ""
-    }
-
-    fun searchClicked() {
-        // TODO local database search
     }
 }

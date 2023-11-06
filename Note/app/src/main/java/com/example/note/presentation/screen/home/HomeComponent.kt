@@ -1,5 +1,6 @@
 package com.example.note.presentation.screen.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,6 +9,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.MoreVert
@@ -16,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -30,23 +35,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.note.presentation.common.DefaultIconButton
 import com.example.note.ui.theme.dark_primary
 import com.example.note.ui.theme.google_login_button
+import com.example.note.ui.theme.non_Sync
 import com.example.note.ui.theme.place_holder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(
-    userName: String = "Poulastaa",
+    userName: String = "Poulastaa", // todo get from email as apiResponse when user loges in
     isData: Boolean,
+    selectAll: Boolean,
     noteEditState: Boolean,
     selectedNumber: Int,
     searchEnabled: Boolean,
     searchText: String,
+    selectAllClicked: () -> Unit,
     searchTextChange: (String) -> Unit,
     searchClicked: () -> Unit,
     enableSearch: () -> Unit,
@@ -101,6 +110,9 @@ fun HomeTopBar(
                         focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
                         unfocusedPlaceholderColor = place_holder,
                         focusedPlaceholderColor = place_holder
+                    ),
+                    textStyle = TextStyle(
+                        fontSize = MaterialTheme.typography.titleMedium.fontSize
                     )
                 )
             else
@@ -125,26 +137,35 @@ fun HomeTopBar(
 
                     if (noteEditState) {
                         DefaultIconButton(
+                            onClick = selectAllClicked,
+                            icon = Icons.Rounded.Check,
+                            color = IconButtonDefaults.iconButtonColors(
+                                contentColor = if (selectAll) non_Sync
+                                else MaterialTheme.colorScheme.inversePrimary
+                            )
+                        )
+
+                        DefaultIconButton(
                             onClick = deleteClicked,
                             icon = Icons.Rounded.Delete
                         )
-                    }
-
-                    if (noteEditState) {
-                        DefaultIconButton(
-                            onClick = clearClicked,
-                            icon = Icons.Rounded.Clear
-                        )
-                    } else {
+                    } else
                         DefaultIconButton(
                             onClick = enableSearch
                         )
-                        DefaultIconButton(
-                            onClick = threeDotClicked,
-                            icon = Icons.Rounded.MoreVert
-                        )
-                    }
+
+                    DefaultIconButton(
+                        onClick = threeDotClicked,
+                        icon = Icons.Rounded.MoreVert
+                    )
                 }
+        },
+        navigationIcon = {
+            if (noteEditState)
+                DefaultIconButton(
+                    onClick = clearClicked,
+                    icon = Icons.Rounded.ArrowBack
+                )
         },
         colors = TopAppBarDefaults.largeTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primary,
@@ -185,13 +206,15 @@ private fun Preview() {
             deleteClicked = {},
             clearClicked = {},
             searchEnabled = false,
+            selectAll = false,
             searchText = "",
             searchTextChange = {
 
             },
             searchClicked = {},
             threeDotClicked = {},
-            selectedNumber = 5
+            selectedNumber = 5,
+            selectAllClicked = {}
         )
 
         FloatingNewButton {

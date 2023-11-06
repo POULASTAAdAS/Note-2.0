@@ -1,12 +1,12 @@
 package com.example.note.presentation.common
 
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,16 +26,16 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +46,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -53,6 +55,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.note.R
@@ -63,21 +66,20 @@ import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.non_Sync
 import com.example.note.ui.theme.place_holder
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginTextField(
     value: String,
     shape: RoundedCornerShape = RoundedCornerShape(40.dp),
     singleLine: Boolean = true,
     label: String,
-    colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
-        focusedBorderColor = MaterialTheme.colorScheme.inversePrimary,
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(
         cursorColor = MaterialTheme.colorScheme.inversePrimary,
         errorCursorColor = MaterialTheme.colorScheme.error,
-        unfocusedLabelColor = place_holder,
-        focusedLabelColor = MaterialTheme.colorScheme.inversePrimary,
+        focusedBorderColor = MaterialTheme.colorScheme.inversePrimary,
         focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
-        unfocusedTrailingIconColor = place_holder
+        unfocusedTrailingIconColor = place_holder,
+        focusedLabelColor = MaterialTheme.colorScheme.inversePrimary,
+        unfocusedLabelColor = place_holder,
     ),
     keyboardOptions: KeyboardOptions = KeyboardOptions(
         imeAction = ImeAction.Next,
@@ -117,13 +119,14 @@ fun LoginTextField(
 fun DefaultIconButton(
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Rounded.Search,
+    color: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        contentColor = MaterialTheme.colorScheme.inversePrimary
+    ),
     onClick: () -> Unit
 ) {
     IconButton(
         onClick = onClick,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            contentColor = MaterialTheme.colorScheme.inversePrimary
-        ),
+        colors = color,
         modifier = Modifier.then(modifier)
     ) {
         Icon(
@@ -297,38 +300,53 @@ fun GoogleLoginButton(
 fun SingleCard(
     note: Note,
     noteEditState: Boolean,
+    searchEnabled: Boolean,
+    selectAll: Boolean,
     changeNoteEditState: () -> Unit,
-    searchOn: Boolean,
     navigateToDetailsScreen: (Int) -> Unit,
     selectedNoteId: (Int, Boolean) -> Unit,
-    selectAll: Boolean
+    columnClicked: () -> Unit
 ) {
     val selected = remember { mutableStateOf(false) }
 
+
     LaunchedEffect(key1 = selectAll) {
         selected.value = selectAll
+        selectedNoteId(note._id, selected.value)
     }
 
-    LaunchedEffect(key1 = noteEditState) {
+    LaunchedEffect(key1 = noteEditState) {// click once
         if (!noteEditState)
             if (selected.value)
                 selected.value = false
     }
 
+    val haptic = LocalHapticFeedback.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
+                interactionSource = MutableInteractionSource(),
+                indication = if (searchEnabled) null else LocalIndication.current, // if search enabled then no ripple effect else default
                 onClick = {
-                    if (noteEditState) {
-                        selected.value = !selected.value
-                        selectedNoteId(note._id, selected.value)
-                    } else navigateToDetailsScreen(note._id)
+                    if (searchEnabled) columnClicked()
+                    else {
+                        if (noteEditState) {
+                            selected.value = !selected.value
+                            selectedNoteId(note._id, selected.value)
+                        } else navigateToDetailsScreen(note._id)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                 },
                 onLongClick = {
-                    changeNoteEditState()
-                    selected.value = true
-                    selectedNoteId(note._id, selected.value)
+                    if (!noteEditState) { // one time call
+                        changeNoteEditState()
+                        selected.value = true
+                        selectedNoteId(note._id, selected.value)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                 }
             ),
         colors = CardDefaults.cardColors(
@@ -345,7 +363,14 @@ fun SingleCard(
                 .padding(10.dp)
         ) {
             Row {
-//                if (!searchOn) // TODO
+                if (note.pinned != null)
+                    if (note.pinned)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_pin),
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = place_holder
+                        )
 
                 Row(
                     modifier = Modifier
@@ -380,7 +405,7 @@ fun SingleCard(
 
             Text(
                 text = note.content!!,
-                maxLines = if (searchOn) 3 else 6,
+                maxLines = if (searchEnabled) 3 else 6,
                 overflow = TextOverflow.Ellipsis,
                 fontWeight = FontWeight.Light,
                 color = MaterialTheme.colorScheme.inversePrimary,
@@ -420,5 +445,28 @@ fun FilledCircle(
         ) {
             drawCircle(color = non_Sync)
         }
+    }
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    SingleCard(
+        note = Note(
+            heading = "heading",
+            content = "this is content",
+            pinned = true,
+            createDate = "23-10-10",
+        ),
+        noteEditState = false,
+        searchEnabled = false,
+        selectAll = false,
+        changeNoteEditState = { /*TODO*/ },
+        navigateToDetailsScreen = {},
+        selectedNoteId = { _, _ ->
+
+        }
+    ) {
+
     }
 }

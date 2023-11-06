@@ -1,14 +1,17 @@
 package com.example.note.presentation.screen.home
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -32,6 +35,7 @@ fun HomeScreen(
 
     val listOfId = homeViewModel.listOfId.collectAsState()
     val listOfIdCount by homeViewModel.listOfIdCount
+
     val noteEditState by homeViewModel.noteEditState
     val selectAll by homeViewModel.selectAll
 
@@ -43,11 +47,15 @@ fun HomeScreen(
                 selectedNumber = listOfIdCount,
                 searchEnabled = searchEnabled,
                 searchText = searchText,
+                selectAll = selectAll,
+                selectAllClicked = {
+                    homeViewModel.selectAll()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                },
                 searchTextChange = {
                     homeViewModel.changeSearchText(it)
                 },
                 searchClicked = {
-                    homeViewModel.searchClicked()
                     focsManager.clearFocus()
                 },
                 enableSearch = {
@@ -55,7 +63,7 @@ fun HomeScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 deleteClicked = {
-                    // TODO
+                    // TODO get list of id from listOfId and perform database operation
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 clearClicked = {
@@ -63,13 +71,13 @@ fun HomeScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 threeDotClicked = {
-                    // TODO
+                    // TODO crate settings screen and selectAll button and pin and new idea
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 }
             )
         },
         floatingActionButton = {
-            AnimatedVisibility(visible = true) { // TODO animation
+            AnimatedVisibility(visible = true) { // TODO animate floating action button like wp
                 FloatingNewButton {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     navigateToNew()
@@ -80,25 +88,23 @@ fun HomeScreen(
         HomeScreenContent(
             paddingValues = paddingValues,
             allData = allData,
-            navigateToDetailsScreen = navigateToDetailsScreen,
+            searchEnabled = searchEnabled,
+            selectAll = selectAll,
+            noteEditState = noteEditState,
+            navigateToDetailsScreen = {
+                navigateToDetailsScreen(it)
+            },
             selectedNoteId = { id, selectState ->
-                if (selectState) {
-                    listOfId.value.add(id)
-                    homeViewModel.listOfIdCountAdd()
-                }
-                else {
-                    listOfId.value.remove(id)
-                    homeViewModel.listOfIdCountMinus()
-                }
-
+                homeViewModel.handleAddOrRemoveOfId(id, selectState)
                 if (listOfId.value.isEmpty()) homeViewModel.changeNoteEditState(false)
             },
-            noteEditState = noteEditState,
             changeNoteEditState = {
                 homeViewModel.changeNoteEditState(true)
             },
-            selectAll = selectAll,
-            searchOn = false
+            columnClicked = {
+                focsManager.clearFocus()
+                homeViewModel.searchIconClicked()
+            }
         )
     }
 }

@@ -52,7 +52,7 @@ fun NewScreen(
                         "nothing to save",
                         Toast.LENGTH_SHORT
                     ).show()
-                    else homeViewModel.getContent(state.toMarkdown())
+                    else homeViewModel.getContentFromRichTextField(state.toMarkdown())
 
                     navigateBack()
                 },

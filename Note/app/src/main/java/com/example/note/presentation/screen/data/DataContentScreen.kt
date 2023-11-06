@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.note.presentation.common.TextFieldEditSideComponent
 import com.example.note.ui.theme.place_holder
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -49,6 +50,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DataContent(
+    dataViewModel: DataViewModel = hiltViewModel(),
     haptic: HapticFeedback,
     focusManager: FocusManager,
     state: RichTextState,

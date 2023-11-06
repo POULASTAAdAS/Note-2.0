@@ -6,6 +6,6 @@ import java.util.Locale
 
 fun getCurrentDtTime(): String =
     SimpleDateFormat(
-        "dd/MM/yy, hh:mm a",
+        "yy-MM-dd, hh:mm a",
         Locale.getDefault()
     ).format(Date())

@@ -66,7 +66,7 @@ fun TextFieldEditSideComponentButton(
 fun TextFieldEditSideComponentLinkButton(
     haptic: HapticFeedback,
     icon: Painter,
-    pressed: MutableState<Boolean> = remember { mutableStateOf(false) },
+    pressed: MutableState<Boolean> = remember { mutableStateOf(false) }, // todo hoist to viewModel
     color: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
         contentColor = MaterialTheme.colorScheme.primary,
         containerColor = if (pressed.value) forgot_text else google_login_button
@@ -203,6 +203,7 @@ fun TextFieldEditSideComponent(
             }
         )
 
+        // ic_color
         TextFieldEditSideComponentButton(
             color1 = marker_color.copy(.5f),
             color2 = marker_color,
