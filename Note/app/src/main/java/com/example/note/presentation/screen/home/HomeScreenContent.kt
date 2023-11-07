@@ -1,19 +1,21 @@
 package com.example.note.presentation.screen.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -22,16 +24,20 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import com.example.note.domain.model.Note
+import com.example.note.presentation.common.CustomToast
 import com.example.note.presentation.common.SingleCardForGridView
 import com.example.note.presentation.common.SingleCardForResearchResult
+import com.example.note.ui.theme.dark_url_color
 
 @Composable
 fun HomeScreenContent(
+    showCustomToast: Boolean,
     searchQuery: String,
     paddingValues: PaddingValues,
     allData: List<Note>,
@@ -70,6 +76,28 @@ fun HomeScreenContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        AnimatedVisibility(
+            visible = showCustomToast,
+            enter = fadeIn(
+                animationSpec = tween(1_000)
+            ) + expandVertically(
+                animationSpec = tween(1_000)
+            ),
+            exit = fadeOut(
+                animationSpec = tween(1_000)
+            ) + shrinkVertically(
+                animationSpec = tween(durationMillis = 1_000)
+            )
+        ) {
+            val temp = remember(this) { showCustomToast }
+
+            if (temp)
+                CustomToast(
+                    "No Internet connection auto sync of",
+                    color = dark_url_color
+                )
+        }
+
         if (allData.isNotEmpty())
             if (searchTriggered)
                 ShowSearchResult(
@@ -83,9 +111,7 @@ fun HomeScreenContent(
                     noteEditState = noteEditState,
                     changeNoteEditState = changeNoteEditState,
                     searchOpen = searchOpen,
-                    navigateToDetailsScreen = {
-                        navigateToDetailsScreen(it)
-                    },
+                    navigateToDetailsScreen = navigateToDetailsScreen,
                     selectedNoteId = { it1, it2 ->
                         selectedNoteId(it1, it2)
                     },

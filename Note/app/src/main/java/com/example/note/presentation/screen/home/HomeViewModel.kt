@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.note.connectivity.NetworkObserver
+import com.example.note.connectivity.NetworkObserverImpl
 import com.example.note.data.remote.DataOrException
 import com.example.note.data.repository.NoteRepositoryImpl
 import com.example.note.domain.model.ApiResponse
@@ -16,6 +18,7 @@ import com.example.note.navigation.Screens
 import com.example.note.utils.Constants.BASE_URL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +33,8 @@ class HomeViewModel @Inject constructor(
     private val networkRepository: NetworkRepository,
     private val dataStoreOperation: DataStoreOperation,
     private val cookieManager: CookieManager,
-    private val db: NoteRepositoryImpl
+    private val db: NoteRepositoryImpl,
+    private val connectivity: NetworkObserverImpl
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
@@ -51,6 +55,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    var network = mutableStateOf(NetworkObserver.STATUS.UNAVAILABLE)
+        private set
 
     init {
         viewModelScope.launch {
@@ -63,6 +69,18 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    init { // not getting called if in the same init block
+        viewModelScope.launch {
+            connectivity.observe().collect {
+                network.value = it
+            }
+        }
+    }
+
+    private fun checkInternetConnection(): Boolean {
+        return network.value == NetworkObserver.STATUS.AVAILABLE
+    }
+
     // ----------------------------------------------------------------------------------
     private val appOpened = mutableStateOf(true)
 
@@ -70,7 +88,7 @@ class HomeViewModel @Inject constructor(
         mutableStateOf(DataOrException())
 //    val apiResponse: State<DataOrException<ApiResponse, Boolean, Exception>> get() = _apiResponse
 
-    val isData = mutableStateOf(false)
+    val showCircularProgressIndicator = mutableStateOf(false)
 
     private val tokenOrCookie = mutableStateOf("")
 
@@ -125,7 +143,9 @@ class HomeViewModel @Inject constructor(
             }
             Log.d("call 5", "cookie set")
 
+
             if (firstTimeLogIn!!) getAllApiData(tokenOrCookie.value)
+            appOpened.value = false // todo this may cause bug when making api call
         }
     }
 
@@ -136,7 +156,7 @@ class HomeViewModel @Inject constructor(
 
             val temp = _apiResponse.value.data?.listOfNote
             if (!temp.isNullOrEmpty()) {
-                isData.value = true
+                showCircularProgressIndicator.value = true
                 storeAllToDB(temp)
             }
         }
@@ -151,14 +171,17 @@ class HomeViewModel @Inject constructor(
                     Log.d("storeAllToDB exception", e.message.toString())
                 }
             }
-            isData.value = false
+            showCircularProgressIndicator.value = false
         }
     }
 
     // -------------------------------------------------------------------------------
+    val showCustomToast = mutableStateOf(false)
+
     val searchText = mutableStateOf("")
 
     val heading = mutableStateOf("")
+    val content = mutableStateOf("")
 
     val searchOpen = mutableStateOf(false)
     val searchTriggered = mutableStateOf(false)
@@ -189,13 +212,27 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun showCustomToast() {
+        viewModelScope.launch {
+            if (!checkInternetConnection()) {
+                showCustomToast.value = true
+                delay(4000)
+            } else showCustomToast.value = false
+        }
+    }
+
 
     fun changeHeadingText(text: String) {
         heading.value = text
     }
 
-    fun clearHeading() {
+    fun changeContentText(value: String) {
+        content.value = value
+    }
+
+    fun clearTextFields() {
         heading.value = ""
+        content.value = ""
     }
 
     fun selectAll() {
@@ -204,26 +241,15 @@ class HomeViewModel @Inject constructor(
 
     fun changeNoteEditState(value: Boolean) {
         noteEditState.value = value
+        if (selectAll.value) selectAll.value = false
+        if (listOfIdCount.intValue > 0) listOfIdCount.intValue = 0
+        if (listOfId.value.isNotEmpty()) listOfId.value.clear()
     }
 
-
-    fun getContentFromRichTextFieldToAdd(
-        content: String,
-        createDate: String
-    ) = viewModelScope.launch(Dispatchers.IO) {
-
-        Log.d("createDate", createDate)
-
-        db.addOne(
-            note = Note(
-                heading = heading.value,
-                content = content,
-                createDate = createDate,
-                updateDate = createDate
-            )
-        )
+    fun addAndPushToServer(createDate: String) {
+        addOne(createDate)
+        showCircularProgressIndicator.value = true
     }
-
 
     fun changeSearchText(text: String) {
         searchText.value = text
@@ -232,14 +258,6 @@ class HomeViewModel @Inject constructor(
             searchTriggered.value = true
             searchDatabase(searchQuery = text.trim())
         } else searchTriggered.value = false
-    }
-
-    private fun searchDatabase(searchQuery: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            db.searchNotes(searchQuery = "%$searchQuery%").collect {
-                searchResult.value = it
-            }
-        }
     }
 
 
@@ -251,6 +269,7 @@ class HomeViewModel @Inject constructor(
         if (noteEditState.value) {
             noteEditState.value = false
             listOfId.value.clear()
+            selectAll.value = false
             listOfIdCount.intValue = 0
         } else
             if (searchText.value.isEmpty()) {
@@ -268,47 +287,73 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    // local database operations
     //---------------------------------------------------------------------------------------
-
-    private val noteID = mutableIntStateOf(0) // heading already exists
-    val content = mutableStateOf("")
+    private val noteID = mutableIntStateOf(0)
     val createDate = mutableStateOf("")
     private val edited = mutableIntStateOf(0)
 
     private val note = mutableStateOf(Note())
 
-    fun setNoteID(id: Int) { // first call
-        noteID.intValue = id
-        getNoteById()
-    }
-
-
-    private fun getNoteById() {
+    private fun searchDatabase(searchQuery: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            db.getOneById(noteID.intValue).collect {
-                heading.value = it.heading!!
-                content.value = it.content!!
-                createDate.value = it.createDate!!
-                edited.intValue = it.edited
-                Log.d("createDate", it.toString())
-                note.value = it
+            db.searchNotes(searchQuery = "%$searchQuery%").collect {
+                searchResult.value = it
             }
         }
     }
 
 
-    fun updateSingle(content: String) {
-        Log.d("content", content)
-        updateOne(content)
+    fun setNoteID(id: Int) { // called from homeScreen(navigation.kt) when navigating to selected screen
+        noteID.intValue = id
+        getNoteById()
     }
 
-    private fun updateOne(content: String) { //todo add apiReq and first add network state
+    private fun getNoteById() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                db.getOneById(noteID.intValue)
+                    .collect { // this will populate all the filed which are observed from selected screen
+                        heading.value = it.heading!!
+                        content.value = it.content!!
+                        createDate.value = it.createDate!!
+                        edited.intValue = it.edited
+                        note.value = it
+                    }
+            } catch (e: Exception) { // deleteOne called form selectedScreen triggering error on getOneById.collect note the method is not called
+                Log.d("error reason god knows", e.message.toString())
+            }
+        }
+    }
+
+    private fun addOne(createDate: String) =
+        viewModelScope.launch(Dispatchers.IO) {
+            db.addOne(
+                note = Note(
+                    heading = heading.value,
+                    content = content.value,
+                    createDate = createDate,
+                    updateDate = createDate
+                )
+            ).also {
+                showCircularProgressIndicator.value = false // todo perform api call
+            }
+        }
+
+
+    fun updateSingle() = if (
+        heading.value.trim().isEmpty() &&
+        content.value.trim().isEmpty()
+    ) deleteOne(note = Note(noteID.intValue))
+    else updateOne()
+
+    private fun updateOne() { //todo add apiReq and first add network state
         viewModelScope.launch(Dispatchers.IO) {
             db.updateOne(
                 note = Note(
                     _id = noteID.intValue,
                     heading = heading.value,
-                    content = content,
+                    content = content.value,
                     createDate = note.value.createDate,
                     updateDate = note.value.updateDate,
                     edited = ++edited.intValue,
@@ -316,6 +361,35 @@ class HomeViewModel @Inject constructor(
                     syncState = note.value.syncState
                 )
             )
+        }
+    }
+
+
+    fun deleteCalledFromHomeScreen() {
+        showCircularProgressIndicator.value = true
+        noteEditState.value = false
+        selectAll.value = false
+        listOfIdCount.intValue = 0
+
+        viewModelScope.launch(Dispatchers.IO) {
+            db.deleteMultiple(noteIdList = listOfId.value)
+                .run {
+                    showCircularProgressIndicator.value = false
+                    listOfId.value.clear()
+                }
+        }
+    }
+
+    fun deleteCalledFromSelectedScreen() {
+        deleteOne(note = Note(_id = noteID.intValue))
+    }
+
+    private fun deleteOne(note: Note) {
+        viewModelScope.launch(Dispatchers.IO) {
+            db.deleteOne(note)
+                .also {
+                    showCircularProgressIndicator.value = false // todo api call
+                }
         }
     }
 }

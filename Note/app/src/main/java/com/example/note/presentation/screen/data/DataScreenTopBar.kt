@@ -62,7 +62,7 @@ fun NoteScreenTopBar(
                 icon = Icons.Rounded.Clear
             )
         },
-        colors = TopAppBarDefaults.topAppBarColors(
+        colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primary,
             titleContentColor = MaterialTheme.colorScheme.inversePrimary.copy(.5f),
         )

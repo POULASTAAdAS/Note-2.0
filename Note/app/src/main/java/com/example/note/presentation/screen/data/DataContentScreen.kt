@@ -1,63 +1,43 @@
 package com.example.note.presentation.screen.data
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.note.presentation.common.TextFieldEditSideComponent
-import com.example.note.ui.theme.place_holder
-import com.mohamedrejeb.richeditor.model.RichTextState
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
+import com.example.note.ui.theme.url_color
+import com.example.note.utils.UrlVisualTransformation
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DataContent(
-    dataViewModel: DataViewModel = hiltViewModel(),
-    haptic: HapticFeedback,
-    focusManager: FocusManager,
-    state: RichTextState,
     paddingValues: PaddingValues,
-    heading: String,
+    focusManager: FocusManager,
     newNote: Boolean,
+    heading: String,
+    content: String,
     onHeadingChange: (String) -> Unit,
+    onContentChange: (String) -> Unit
 ) {
     val focusRequester = remember {
         FocusRequester()
@@ -83,6 +63,9 @@ fun DataContent(
             text = heading,
             onTextChange = onHeadingChange,
             placeHolder = "heading..",
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
             keyboardActions = KeyboardActions(
                 onNext = {
                     focusManager.moveFocus(FocusDirection.Down)
@@ -93,90 +76,17 @@ fun DataContent(
                 .focusRequester(focusRequester)
         )
 
-        Row {
-            RichTextEditor( // todo delete RichTextEditor
-                state = state,
-                modifier = Modifier
-                    .windowInsetsPadding(WindowInsets.ime)
-                    .weight(.8f),
-                colors = RichTextEditorDefaults.richTextEditorColors(
-                    containerColor = Color.Transparent,
-                    cursorColor = MaterialTheme.colorScheme.inversePrimary,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
-                    placeholderColor = place_holder
-                ),
-                placeholder = {
-                    Text(text = "write something...")
-                }
-            )
-
-            val show = remember {
-                mutableStateOf(false)
-            }
-
-            Column {
-                IconButton(
-                    onClick = {
-                        show.value = !show.value
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    },
-                    modifier = Modifier.rotate(if (show.value) 180f else 0f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.KeyboardArrowDown,
-                        contentDescription = null,
-                    )
-                }
-
-                AnimatedVisibility(visible = show.value) {
-                    AnimatedVisibility(visible = show.value) {
-                        TextFieldEditSideComponent(
-                            state = state,
-                            bold = dataViewModel.bold.value,
-                            italic = dataViewModel.italic.value,
-                            title = dataViewModel.title.value,
-                            underLine = dataViewModel.underline.value,
-                            lineThrough = dataViewModel.lineThrough.value,
-                            link = dataViewModel.link.value,
-                            color = dataViewModel.color.value,
-                            toggleBold = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dataViewModel.toggleBold()
-                            },
-                            toggleItalic = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dataViewModel.toggleItalic()
-                            },
-                            toggleTitle = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dataViewModel.toggleTitle()
-                            },
-                            toggleUnderline = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dataViewModel.toggleUnderline()
-                            },
-                            toggleLineThrough = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dataViewModel.toggleLineThrough()
-                            },
-                            toggleLink = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dataViewModel.toggleLink()
-                            },
-                            toggleColor = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dataViewModel.toggleColor()
-                            },
-                            moveFocus = {
-                                focusManager.moveFocus(FocusDirection.Down)
-                            }
-                        )
-                    }
-                }
-            }
-        }
+        DataScreenTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .imePadding(),
+            text = content,
+            onTextChange = onContentChange,
+            placeHolder = "write something...",
+            singleLine = false,
+            textStyle = LocalTextStyle.current,
+            visualTransformation = UrlVisualTransformation(url_color)
+        )
     }
 }
 
@@ -184,19 +94,15 @@ fun DataContent(
 @Preview(showBackground = true)
 @Composable
 private fun PreviewDark() {
-    val state = rememberRichTextState()
-
-    val haptic = LocalHapticFeedback.current
-
     val focusManager = LocalFocusManager.current
 
     DataContent(
-        haptic = haptic,
-        state = state,
         focusManager = focusManager,
         paddingValues = PaddingValues(),
         heading = "",
         newNote = true,
         onHeadingChange = {},
+        content = "",
+        onContentChange = {}
     )
 }

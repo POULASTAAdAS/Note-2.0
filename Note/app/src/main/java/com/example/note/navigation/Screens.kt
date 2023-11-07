@@ -5,6 +5,6 @@ sealed class Screens(val path : String){
 
     data object Home : Screens("home_screen")
 
-    data object New: Screens("new_screen/{noteID}")
-    data object Selected: Screens("selected_screen/{noteID}")
+    data object New: Screens("new_screen")
+    data object Selected: Screens("selected_screen")
 }

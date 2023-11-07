@@ -1,6 +1,5 @@
 package com.example.note.navigation
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -33,10 +32,10 @@ fun SetUpNavGraph(
                 homeViewModel = homeViewModel,
                 navigateToDetailsScreen = {
                     homeViewModel.setNoteID(it)
-                    navHostController.navigate("selected_screen/$it") // todo delete navArgument
+                    navHostController.navigate(Screens.Selected.path)
                 },
                 navigateToNew = {
-                    navHostController.navigate("new_screen/${-1}")// todo delete navArgument
+                    navHostController.navigate(Screens.New.path)
                 }
             )
         }

@@ -21,17 +21,16 @@ val dark_background = Color(0xFF000041)
 
 val non_Sync = Color(0xFFEEB300)
 
-
 val light_place_holder = Color.LightGray
 val dark_place_holder = Color.Gray
 
-@Stable
-val marker_color = Color(0xFFEEB300)
-
+val dark_url_color = Color(0xFF0096DA)
+val light_url_color = Color.Blue
 
 val forgot_text = Color(0xFF0096DA)
 
 val google_login_button = Color(0xFF5DCCFF)
+
 
 val primary
     @Composable get() = if (isSystemInDarkTheme()) dark_primary else light_primary
@@ -44,3 +43,6 @@ val place_holder
 
 val background
     @Composable get() = if (isSystemInDarkTheme()) dark_background else light_background
+
+val url_color
+    @Composable get() = if (isSystemInDarkTheme()) dark_url_color else light_url_color

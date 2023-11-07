@@ -1,5 +1,7 @@
 package com.example.note.di
 
+import android.content.Context
+import com.example.note.connectivity.NetworkObserverImpl
 import com.example.note.data.remote.NoteApi
 import com.example.note.data.repository.NetworkRepositoryImpl
 import com.example.note.domain.repository.NetworkRepository
@@ -8,6 +10,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.JavaNetCookieJar
@@ -55,7 +58,11 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideNetworkRepository(
-        noteApi: NoteApi
-    ): NetworkRepository = NetworkRepositoryImpl(noteApi = noteApi)
+    fun provideNetworkRepository(noteApi: NoteApi): NetworkRepository =
+        NetworkRepositoryImpl(noteApi = noteApi)
+
+    @Provides
+    @Singleton
+    fun provideNetworkConnectivityObserver(@ApplicationContext context: Context) =
+        NetworkObserverImpl(context = context)
 }

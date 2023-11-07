@@ -1,5 +1,6 @@
 package com.example.note.presentation.common
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -26,16 +27,17 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -67,13 +69,14 @@ import com.example.note.ui.theme.non_Sync
 import com.example.note.ui.theme.place_holder
 import com.example.note.utils.getAnnotatedString
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginTextField(
     value: String,
     shape: RoundedCornerShape = RoundedCornerShape(40.dp),
     singleLine: Boolean = true,
     label: String,
-    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(
+    colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
         cursorColor = MaterialTheme.colorScheme.inversePrimary,
         errorCursorColor = MaterialTheme.colorScheme.error,
         focusedBorderColor = MaterialTheme.colorScheme.inversePrimary,
@@ -336,6 +339,7 @@ fun SingleCardForGridView(
                             selected.value = !selected.value
                             selectedNoteId(note._id, selected.value)
                         } else navigateToDetailsScreen(note._id)
+
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                 },

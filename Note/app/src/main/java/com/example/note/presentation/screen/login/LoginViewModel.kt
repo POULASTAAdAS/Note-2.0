@@ -3,8 +3,11 @@ package com.example.note.presentation.screen.login
 import android.app.Activity
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.credentials.CreatePasswordRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -17,6 +20,8 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.note.connectivity.NetworkObserver
+import com.example.note.connectivity.NetworkObserverImpl
 import com.example.note.data.remote.DataOrException
 import com.example.note.domain.model.LoginRequest
 import com.example.note.domain.model.LoginResponse
@@ -25,7 +30,6 @@ import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.net.CookieManager
@@ -36,8 +40,24 @@ class LoginViewModel @Inject constructor(
     private val application: Application,
     private val networkRepository: NetworkRepository,
     private val dataStoreOperation: DataStoreOperation,
-    private val cookieManager: CookieManager
+    private val cookieManager: CookieManager,
+    private val connectivity: NetworkObserverImpl,
 ) : ViewModel() {
+    private var network by mutableStateOf(NetworkObserver.STATUS.UNAVAILABLE)
+
+    init {
+        viewModelScope.launch {
+            connectivity.observe().collect {
+                network = it
+            }
+        }
+    }
+
+    fun checkInternetConnection(): Boolean {
+        return network == NetworkObserver.STATUS.AVAILABLE
+    }
+
+
     val googleButtonLoadingState = mutableStateOf(false)
     val basicLoginLoadingState = mutableStateOf(false)
 
@@ -162,7 +182,7 @@ class LoginViewModel @Inject constructor(
     private fun getSignInWithSavedCredentialJWTToken(credential: PasswordCredential) {
         viewModelScope.launch {
             loginResponse.value =
-                networkRepository.loginSignUp( // TODO signInWithSavedCredential server req to get jwt token
+                networkRepository.loginSignUp( // signInWithSavedCredential server req to get jwt token
                     request = LoginRequest(
                         email = credential.id,
                         password = credential.password,
@@ -213,34 +233,46 @@ class LoginViewModel @Inject constructor(
         changeBasicLoginLoadingState(true)
         loginResponse.value.loading = true
 
-        viewModelScope.launch(Dispatchers.IO) {
-            loginResponse.value = networkRepository.loginSignUp( //TODO first time login using jwt
-                request = LoginRequest(
-                    email = emailFiled.value,
-                    password = passwordFiled.value,
-                    initial = true
-                )
-            )
-
-            if (loginResponse.value.data?.token != null) {
-                val jwtToken = loginResponse.value.data!!.token!!
-
-                if (
-                    loginResponse.value.data!!.userExists!! == UserExists.YES_SAME_PASSWORD.name ||
-                    loginResponse.value.data!!.userExists!! == UserExists.NO.name
-                ) {
-                    saveJWTTokenOrCookie(jwtToken)
-                    startBasicLoginProcess(
-                        activity = activity,
-                        credential = credential
+        if (checkInternetConnection()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                loginResponse.value = networkRepository.loginSignUp( //first time login using jwt
+                    request = LoginRequest(
+                        email = emailFiled.value,
+                        password = passwordFiled.value,
+                        initial = true
                     )
+                )
+
+                if (loginResponse.value.data?.token != null) {
+                    val jwtToken = loginResponse.value.data!!.token!!
+
+                    if (
+                        loginResponse.value.data!!.userExists!! == UserExists.YES_SAME_PASSWORD.name ||
+                        loginResponse.value.data!!.userExists!! == UserExists.NO.name
+                    ) {
+                        saveJWTTokenOrCookie(jwtToken)
+                        startBasicLoginProcess(
+                            activity = activity,
+                            credential = credential
+                        )
+                    } else {
+                        // TODO UserExists.YES_DIFF_PASSWORD
+                    }
                 } else {
-                    // TODO UserExists.YES_DIFF_PASSWORD
+                    unableToLogin.value = true
+                    emptyTextAndPasswordField()
                 }
-            } else {
-                unableToLogin.value = true
-                emptyTextAndPasswordField()
+                changeBasicLoginLoadingState(false)
+                loginResponse.value.loading = false
             }
+
+        } else {
+            Toast.makeText(
+                activity,
+                "please check your internet connection",
+                Toast.LENGTH_SHORT
+            ).show()
+
             changeBasicLoginLoadingState(false)
             loginResponse.value.loading = false
         }
@@ -263,14 +295,17 @@ class LoginViewModel @Inject constructor(
         Log.d("token", tokenId) // TODO comment time of production
 
         viewModelScope.launch(Dispatchers.IO) {
-            loginResponse.value = networkRepository.loginSignUp( // TODO login using google
+            loginResponse.value = networkRepository.loginSignUp( //login using google
                 request = LoginRequest(
                     googleToken = tokenId,
                     initial = true
                 )
             )
 
-            if (loginResponse.value.data?.googleLogIn != null && loginResponse.value.data?.googleLogIn == true) {
+            if (
+                loginResponse.value.data?.googleLogIn != null &&
+                loginResponse.value.data?.googleLogIn == true
+            ) {
                 dataStoreOperation.saveAuthenticationType(true)
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)

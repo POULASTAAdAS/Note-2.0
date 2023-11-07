@@ -47,7 +47,7 @@ import com.example.note.ui.theme.place_holder
 @Composable
 fun HomeTopBar(
     userName: String = "Poulastaa", // todo get from email as apiResponse when user loges in
-    isData: Boolean,
+    showCircularProgressIndicator: Boolean,
     selectAll: Boolean,
     noteEditState: Boolean,
     selectedNumber: Int,
@@ -98,16 +98,13 @@ fun HomeTopBar(
                             searchClicked()
                         }
                     ),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color.Transparent,
                         cursorColor = MaterialTheme.colorScheme.inversePrimary,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedTrailingIconColor = MaterialTheme.colorScheme.inversePrimary,
-                        unfocusedPlaceholderColor = place_holder,
-                        focusedPlaceholderColor = place_holder
+                        placeholderColor = place_holder,
                     ),
                     textStyle = TextStyle(
                         fontSize = MaterialTheme.typography.titleMedium.fontSize
@@ -125,7 +122,7 @@ fun HomeTopBar(
                         modifier = Modifier.weight(1f)
                     )
 
-                    if (isData) {
+                    if (showCircularProgressIndicator) {
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.inversePrimary,
                             strokeWidth = 1.5.dp,
@@ -198,8 +195,8 @@ fun FloatingNewButton(
 private fun Preview() {
     Column {
         HomeTopBar(
-            isData = false,
-            noteEditState = false,
+            showCircularProgressIndicator = false,
+            noteEditState = true,
             enableSearch = {},
             deleteClicked = {},
             clearClicked = {},

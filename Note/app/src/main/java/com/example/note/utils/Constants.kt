@@ -3,7 +3,7 @@ package com.example.note.utils
 object Constants {
     const val CLIENT_ID = "1066581405722-t9u0k0b9be6nstfdlcs86m61e3ve4cv7.apps.googleusercontent.com"
 
-    const val BASE_URL = "https://085c-103-44-175-195.ngrok-free.app"
+    const val BASE_URL = "https://ff41-103-44-175-195.ngrok-free.app"
 
     const val PREFERENCES_NAME = "appPreferences"
 

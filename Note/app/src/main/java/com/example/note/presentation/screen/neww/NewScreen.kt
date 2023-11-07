@@ -1,6 +1,7 @@
 package com.example.note.presentation.screen.neww
 
 import android.widget.Toast
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,48 +16,45 @@ import com.example.note.presentation.screen.data.DataContent
 import com.example.note.presentation.screen.data.NoteScreenTopBar
 import com.example.note.presentation.screen.home.HomeViewModel
 import com.example.note.utils.getCurrentDate
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewScreen(
     homeViewModel: HomeViewModel,
     navigateBack: () -> Unit
 ) {
     val heading by homeViewModel.heading
-
-    val state = rememberRichTextState()
+    val content by homeViewModel.content
 
     val haptic = LocalHapticFeedback.current
     val focusManager = LocalFocusManager.current
-    val content = LocalContext.current
 
-    val localDtTime = remember {
+    val context = LocalContext.current
+
+    val localDate = remember {
         mutableStateOf("")
     }
 
     LaunchedEffect(key1 = Unit) {
-        homeViewModel.clearHeading()
-        localDtTime.value = getCurrentDate()
+        localDate.value = getCurrentDate()
     }
 
     Scaffold(
         topBar = {
             NoteScreenTopBar(
-                createTime = localDtTime.value,
+                createTime = localDate.value,
                 saveClicked = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     focusManager.clearFocus()
 
-                    if (state.toMarkdown().trim().isEmpty() && heading.isEmpty())
+                    if (content.trim().isNotEmpty() || heading.trim().isNotEmpty())
+                        homeViewModel.addAndPushToServer(it)
+                    else
                         Toast.makeText(
-                            content,
+                            context,
                             "nothing to save",
                             Toast.LENGTH_SHORT
                         ).show()
-                    else homeViewModel.getContentFromRichTextFieldToAdd(
-                        content = state.toMarkdown(),
-                        createDate = it
-                    )
 
                     navigateBack()
                 },
@@ -70,14 +68,16 @@ fun NewScreen(
         },
         content = { paddingValues ->
             DataContent(
-                haptic = haptic,
-                state = state,
                 focusManager = focusManager,
                 paddingValues = paddingValues,
                 heading = heading,
+                content = content,
                 newNote = true,
                 onHeadingChange = {
                     homeViewModel.changeHeadingText(it)
+                },
+                onContentChange = {
+                    homeViewModel.changeContentText(it)
                 }
             )
         }

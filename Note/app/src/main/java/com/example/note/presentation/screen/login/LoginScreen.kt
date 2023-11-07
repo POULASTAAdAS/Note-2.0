@@ -31,7 +31,7 @@ fun LoginScreen(
     val unableToLogin by loginViewModel.unableToLogin
 
     val credential by loginViewModel.signedInPasswordCredential.collectAsState()
-    
+
     val focusManager = LocalFocusManager.current
     val activity = LocalContext.current as Activity
 
@@ -109,7 +109,7 @@ fun LoginScreen(
         }
     }
 
-    LaunchedEffect(key1 = Unit) {// logging in with old jwt auth account
+    LaunchedEffect(key1 = Unit) {// logging in with old jwt auth account if saved at google password manager by the user
         loginViewModel.signInWithSavedCredential(activity)
     }
 }
@@ -123,6 +123,7 @@ fun StartGoogleLoginProcess(
 ) {
     val activity = LocalContext.current as Activity
 
+
     StartActivityForResult(
         key = loadingState,
         onResultReceived = {
@@ -131,15 +132,24 @@ fun StartGoogleLoginProcess(
         },
         onDialogDismissed = loginDismissed
     ) { activityLauncher ->
-        if (loadingState) {
-            singIn(
-                activity = activity,
-                launchActivityResult = { intentSenderRequest ->
-                    loginDismissed()
-                    activityLauncher.launch(intentSenderRequest)
-                },
-                accountNotFound = loginDismissed
-            )
-        }
+        if (loadingState)
+            if (loginViewModel.checkInternetConnection()) {
+                singIn(
+                    activity = activity,
+                    launchActivityResult = { intentSenderRequest ->
+                        loginDismissed()
+                        activityLauncher.launch(intentSenderRequest)
+                    },
+                    accountNotFound = loginDismissed
+                )
+            } else {
+                Toast.makeText(
+                    activity,
+                    "please check your internet connection",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                loginDismissed()
+            }
     }
 }
