@@ -9,13 +9,19 @@ import androidx.lifecycle.viewModelScope
 import com.example.note.connectivity.NetworkObserver
 import com.example.note.connectivity.NetworkObserverImpl
 import com.example.note.data.remote.DataOrException
+import com.example.note.data.repository.InternalDatabaseImpl
 import com.example.note.data.repository.NoteRepositoryImpl
+import com.example.note.data.repository.RecentlyDeletedRepositoryImpl
+import com.example.note.domain.model.ApiNote
+import com.example.note.domain.model.ApiRequest
 import com.example.note.domain.model.ApiResponse
 import com.example.note.domain.model.Note
+import com.example.note.domain.model.RecentlyDeleted
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
 import com.example.note.navigation.Screens
 import com.example.note.utils.Constants.BASE_URL
+import com.example.note.utils.getCurrentDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -30,13 +36,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val connectivity: NetworkObserverImpl,
     private val networkRepository: NetworkRepository,
     private val dataStoreOperation: DataStoreOperation,
     private val cookieManager: CookieManager,
-    private val db: NoteRepositoryImpl,
-    private val connectivity: NetworkObserverImpl
+    private val dbNote: NoteRepositoryImpl,
+    private val dbRecentlyDeleted: RecentlyDeletedRepositoryImpl,
+    private val dbInternal: InternalDatabaseImpl
 ) : ViewModel() {
-
     private val _isLoading = MutableStateFlow(true)
     val isLoading get() = _isLoading.asStateFlow()
 
@@ -49,11 +56,13 @@ class HomeViewModel @Inject constructor(
 
     private fun getAllData() {
         viewModelScope.launch(Dispatchers.IO) {
-            db.getAllByPinnedAndUpdateDate().collect {
+            dbNote.getAllByPinnedAndUpdateDate().collect {
                 _allData.value = it
             }
         }
     }
+
+    private val autoSync = mutableStateOf(true)
 
     var network = mutableStateOf(NetworkObserver.STATUS.UNAVAILABLE)
         private set
@@ -162,11 +171,124 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+
+    private fun handleApiAddApiCall(note: Note) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (autoSync.value && checkInternetConnection()) // if internet true api call
+                networkRepository.addOne(
+                    token = "Bearer ${tokenOrCookie.value}",
+                    request = ApiRequest(
+                        note = note
+                    )
+                ).also {
+                    if (it.data?.status != null && it.data!!.status) // if apiResponse true update syncState
+                        dbNote.updateSyncState(
+                            id = note._id,
+                            syncState = true
+                        ).also {
+                            showCircularProgressIndicator.value = false
+                        }
+                    else // if apiResponse false or some unexpected error add to dbAddUpdate
+                        dbInternal.addOne(
+                            apiNote = ApiNote(
+                                id = note._id,
+                                heading = note.heading,
+                                content = note.content,
+                                createDate = note.createDate!!,
+                                updateDate = note.updateDate!!,
+                                edited = note.edited,
+                                pinned = note.pinned,
+                                syncState = false,
+                                insert = true
+                            )
+                        ).also {
+                            showCircularProgressIndicator.value = false
+                        }
+                }
+            else dbInternal.addOne( // no internet add to dbAddUpdate
+                apiNote = ApiNote(
+                    id = note._id,
+                    heading = note.heading,
+                    content = note.content,
+                    createDate = note.createDate!!,
+                    updateDate = note.updateDate!!,
+                    edited = note.edited,
+                    pinned = note.pinned,
+                    syncState = false,
+                    insert = true
+                )
+            ).also {
+                showCircularProgressIndicator.value = false
+            }
+        }
+    }
+
+    private fun handleUpdateApiCall(note: Note) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (autoSync.value && checkInternetConnection())
+                networkRepository.updateOne( // if internet true api call
+                    token = "Bearer ${tokenOrCookie.value}",
+                    request = ApiRequest(
+                        note = note
+                    )
+                ).also {
+                    if (it.data?.status != null && it.data!!.status)
+                        dbNote.updateSyncState( // if apiResponse true update syncState and delete from dbAddUpdate
+                            id = note._id,
+                            syncState = true
+                        ).also {
+                            dbInternal.deleteOne(id = note._id)
+                            showCircularProgressIndicator.value = false
+                        }
+                    else // if apiResponse false or some unexpected error add to dbAddUpdate
+                        dbInternal.upsert( // if exists then update else insert
+                            apiNote = ApiNote(
+                                id = note._id,
+                                heading = note.heading,
+                                content = note.content,
+                                createDate = note.createDate!!,
+                                updateDate = note.updateDate!!,
+                                edited = note.edited,
+                                pinned = note.pinned,
+                                syncState = false,
+                                update = true
+                            )
+                        ).also {
+                            showCircularProgressIndicator.value = false
+                        }
+                }
+            else dbInternal.upsert( // no internet add to dbAddUpdate
+                apiNote = ApiNote(
+                    id = note._id,
+                    heading = note.heading,
+                    content = note.content,
+                    createDate = note.createDate!!,
+                    updateDate = note.updateDate!!,
+                    edited = note.edited,
+                    pinned = note.pinned,
+                    syncState = false,
+                    update = true
+                )
+            ).also {
+                dbNote.updateSyncState( // no internet update syncState
+                    id = note._id,
+                    syncState = false
+                )
+                showCircularProgressIndicator.value = false
+            }
+        }
+    }
+
+    private fun handleDeleteApiCall(note: Note) {
+
+    }
+
+
     private fun storeAllToDB(listOfNote: List<Note>) {
         viewModelScope.launch(Dispatchers.IO) {
             listOfNote.forEach {
                 try {
-                    db.addOne(it)
+                    dbNote.addOne(it)
                 } catch (e: IOException) {
                     Log.d("storeAllToDB exception", e.message.toString())
                 }
@@ -297,7 +419,7 @@ class HomeViewModel @Inject constructor(
 
     private fun searchDatabase(searchQuery: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            db.searchNotes(searchQuery = "%$searchQuery%").collect {
+            dbNote.searchNotes(searchQuery = "%$searchQuery%").collect {
                 searchResult.value = it
             }
         }
@@ -312,23 +434,24 @@ class HomeViewModel @Inject constructor(
     private fun getNoteById() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                db.getOneById(noteID.intValue)
+                dbNote.getOneById(noteID.intValue)
                     .collect { // this will populate all the filed which are observed from selected screen
+                        Log.d("called", it.toString())
                         heading.value = it.heading!!
                         content.value = it.content!!
                         createDate.value = it.createDate!!
                         edited.intValue = it.edited
                         note.value = it
                     }
-            } catch (e: Exception) { // deleteOne called form selectedScreen triggering error on getOneById.collect note the method is not called
+            } catch (e: Exception) { // deleteOne called form selectedScreen triggering error on getOneById.collect method even if not called
                 Log.d("error reason god knows", e.message.toString())
             }
         }
     }
 
-    private fun addOne(createDate: String) =
+    private fun addOne(createDate: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            db.addOne(
+            dbNote.addOne(
                 note = Note(
                     heading = heading.value,
                     content = content.value,
@@ -336,20 +459,44 @@ class HomeViewModel @Inject constructor(
                     updateDate = createDate
                 )
             ).also {
-                showCircularProgressIndicator.value = false // todo perform api call
+                handleApiAddApiCall(
+                    note = Note(
+                        _id = it.toInt(),
+                        heading = heading.value,
+                        content = content.value,
+                        createDate = createDate,
+                        updateDate = createDate,
+                        edited = 0,
+                        pinned = false,
+                        syncState = true
+                    )
+                )
             }
         }
+    }
 
 
-    fun updateSingle() = if (
-        heading.value.trim().isEmpty() &&
-        content.value.trim().isEmpty()
-    ) deleteOne(note = Note(noteID.intValue))
-    else updateOne()
+    fun updateSingle() {
+        if (
+            heading.value.trim().isEmpty() &&
+            content.value.trim().isEmpty()
+        ) deleteOne(note = Note(noteID.intValue), true)
+            .also {
+                // TODO handle delete edge case
+            }
+        else
+            if (
+                heading.value.trim() != note.value.heading ||
+                content.value.trim() != note.value.content
+            ) updateOne()
+    }
 
-    private fun updateOne() { //todo add apiReq and first add network state
+
+    private fun updateOne() {
+        showCircularProgressIndicator.value = true
+
         viewModelScope.launch(Dispatchers.IO) {
-            db.updateOne(
+            dbNote.updateOne(
                 note = Note(
                     _id = noteID.intValue,
                     heading = heading.value,
@@ -360,7 +507,20 @@ class HomeViewModel @Inject constructor(
                     pinned = note.value.pinned,
                     syncState = note.value.syncState
                 )
-            )
+            ).also {
+                handleUpdateApiCall(
+                    note = Note(
+                        _id = noteID.intValue,
+                        heading = heading.value,
+                        content = content.value,
+                        createDate = note.value.createDate,
+                        updateDate = note.value.updateDate,
+                        edited = ++edited.intValue,
+                        pinned = note.value.pinned,
+                        syncState = true
+                    )
+                )
+            }
         }
     }
 
@@ -371,25 +531,62 @@ class HomeViewModel @Inject constructor(
         selectAll.value = false
         listOfIdCount.intValue = 0
 
+        // todo make api call
+
         viewModelScope.launch(Dispatchers.IO) {
-            db.deleteMultiple(noteIdList = listOfId.value)
-                .run {
-                    showCircularProgressIndicator.value = false
-                    listOfId.value.clear()
+            dbNote.getMultipleById(
+                listOfId = listOfId.value
+            ).collect {
+                for (note in it) putOneToRecentlyDeletedDatabase(note)
+
+                dbNote.deleteMultiple(noteIdList = listOfId.value)
+                    .also {
+                        delay(800)
+                        showCircularProgressIndicator.value = false
+                    }
+                listOfId.value.clear()
+            }
+        }
+    }
+
+    fun deleteCalledFromSelectedScreen() =
+        deleteOne(note = note.value, false)
+
+    private fun deleteOne(note: Note, empty: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // todo make api call
+
+            dbNote.deleteOne(note)
+                .also {
+                    if (!empty) putOneToRecentlyDeletedDatabase(note)
                 }
         }
     }
 
-    fun deleteCalledFromSelectedScreen() {
-        deleteOne(note = Note(_id = noteID.intValue))
+    private fun putOneToRecentlyDeletedDatabase(note: Note) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbRecentlyDeleted.addOne(
+                recentlyDeleted = RecentlyDeleted(
+                    id = note._id,
+                    heading = note.heading,
+                    content = note.content,
+                    createDate = note.createDate!!,
+                    updateDate = note.updateDate!!,
+                    edited = note.edited,
+                    pinned = note.pinned,
+                    syncState = note.syncState,
+                    deleteDate = getCurrentDate()
+                )
+            )
+        }
     }
 
-    private fun deleteOne(note: Note) {
+    fun temp() {
         viewModelScope.launch(Dispatchers.IO) {
-            db.deleteOne(note)
-                .also {
-                    showCircularProgressIndicator.value = false // todo api call
-                }
+            dbInternal.getAll().collect {
+                for (i in it)
+                    Log.d("addUpdateNote", i.toString())
+            }
         }
     }
 }

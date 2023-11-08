@@ -1,4 +1,4 @@
-package com.example.note.data.database
+package com.example.note.data.database.note
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -20,15 +20,23 @@ interface NoteDao {
     @Query("select * from noteTable where id=:id")
     fun getOneById(id: Int): Flow<Note>
 
+    @Query("select * from noteTable where id in (:lisOffId)")
+    fun getMultipleById(lisOffId: ArrayList<Int>): Flow<List<Note>>
+
     @Query("select * from noteTable where createDate=:createDate")
     fun getByCreateDate(createDate: String): Flow<List<Note>>
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun addOne(note: Note)
+    suspend fun addOne(note: Note): Long
 
     @Update
     suspend fun updateOne(note: Note)
+
+
+    @Query("update noteTable set syncState=:syncState where id=:id")
+    suspend fun updateSyncState(id: Int, syncState: Boolean)
+
 
     @Delete
     suspend fun deleteOne(note: Note)

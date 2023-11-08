@@ -29,6 +29,7 @@ class NoteDataBaseOperationImpl(
             UserExists.NO
         }
     }
+
     override suspend fun createGoogleAuthenticatedUser(user: User): UserExists {
         val tempUser = userCollection.findOne(filter = User::name eq user.name)
 
@@ -48,6 +49,7 @@ class NoteDataBaseOperationImpl(
         }
         return list
     }
+
     override suspend fun getAllNoteForGoogleAuthenticatedUser(sub: String): List<Note> {
         val list: ArrayList<Note> = ArrayList()
 
@@ -73,6 +75,7 @@ class NoteDataBaseOperationImpl(
         }
         return false
     }
+
     override suspend fun addOneForGoogleUser(note: Note, sub: String): Boolean {
         val find = userCollection.find(
             Filters.eq("sub", sub),
@@ -95,6 +98,7 @@ class NoteDataBaseOperationImpl(
             addOneForJWTUser(it, email)
         }
     }
+
     override suspend fun addMultipleForGoogleUser(listOfNote: List<Note>, sub: String) {
         listOfNote.forEach {
             addOneForGoogleUser(it, sub)
@@ -112,19 +116,25 @@ class NoteDataBaseOperationImpl(
         userCollection.updateOne(
             filter = find,
             update = Updates.set("listOfNote.$", note)
-        )
+        ).run {
+            if (wasAcknowledged())
+                addOneForJWTUser(note, email)
+        }
     }
+
     override suspend fun updateOneForGoogleUser(note: Note, sub: String) {
         val find = and(
             Filters.eq("sub", sub),
             Filters.eq("listOfNote._id", note._id)
         )
 
-
         userCollection.updateOne(
             filter = find,
             update = Updates.set("listOfNote.$", note)
-        )
+        ).run {
+            if (wasAcknowledged())
+                addOneForGoogleUser(note, sub)
+        }
     }
 
 
@@ -133,6 +143,7 @@ class NoteDataBaseOperationImpl(
             updateOneForJWTUser(it, email)
         }
     }
+
     override suspend fun updateMultipleForGoogleUser(listOfNote: List<Note>, sub: String) {
         listOfNote.forEach {
             updateOneForGoogleUser(it, sub)
@@ -150,6 +161,7 @@ class NoteDataBaseOperationImpl(
 
         userCollection.updateOne(find, update)
     }
+
     override suspend fun deleteOneForGoogleUser(_id: String, sub: String) {
         val find = and(
             User::sub eq sub,
@@ -166,6 +178,7 @@ class NoteDataBaseOperationImpl(
             deleteOneForJWTUser(it, email)
         }
     }
+
     override suspend fun deleteMultipleForGoogleUser(listOf_id: List<String>, sub: String) {
         listOf_id.forEach {
             deleteOneForGoogleUser(it, sub)
@@ -175,6 +188,7 @@ class NoteDataBaseOperationImpl(
     override suspend fun deleteJWTUser(email: String) {
         userCollection.deleteOne(User::email eq email)
     }
+
     override suspend fun deleteGoogleUser(sub: String) {
         userCollection.deleteOne(User::sub eq sub)
     }

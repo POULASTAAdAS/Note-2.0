@@ -1,0 +1,10 @@
+package com.example.note.domain.model
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ApiRequest(
+    val listOfId: List<String>? = null,
+    val note: Note? = null,
+    val listOfNote: List<Note>? = null
+)

@@ -1,6 +1,5 @@
 package com.example.note.presentation.common
 
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -377,25 +377,28 @@ fun SingleCardForGridView(
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 8.dp),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = note.createDate!!.drop(2),
-                        modifier = Modifier
-                            .padding(end = 8.dp),
+
                         color = place_holder,
                         maxLines = 1,
                         fontSize = MaterialTheme.typography.labelSmall.fontSize
                     )
+
+                    if (!note.syncState)
+                        Spacer(modifier = Modifier.width(8.dp))
+
                     if (noteEditState)
                         if (selected.value)
                             FilledCircle(14.dp)
                         else EmptyCircle()
                     else
-                        FilledCircle(4.dp)
+                        if (!note.syncState)
+                            FilledCircle(4.dp)
                 }
             }
 
@@ -527,7 +530,8 @@ private fun Preview() {
             heading = "heading",
             content = "this is content",
             pinned = true,
-            createDate = "23-10-10",
+            createDate = "2023-10-10",
+            syncState = false
         ),
         noteEditState = false,
         searchOpen = false,
