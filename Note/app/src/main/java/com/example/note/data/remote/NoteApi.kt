@@ -5,7 +5,9 @@ import com.example.note.domain.model.ApiResponse
 import com.example.note.domain.model.LoginRequest
 import com.example.note.domain.model.LoginResponse
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -58,14 +60,14 @@ interface NoteApi {
 
     //---------------------------------
 
-    @POST("/delete_one")
+    @HTTP(method = "DELETE", path = "/delete_one", hasBody = true)
     suspend fun deleteOne(
         @Header("Authorization")
         token: String,
         @Body request: ApiRequest
     ): ApiResponse
 
-    @POST("/delete_multiple")
+    @HTTP(method = "DELETE", path = "/delete_multiple", hasBody = true)
     suspend fun deleteMultiple(
         @Header("Authorization")
         token: String,

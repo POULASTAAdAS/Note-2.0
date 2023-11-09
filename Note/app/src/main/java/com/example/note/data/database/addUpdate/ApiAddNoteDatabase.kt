@@ -2,9 +2,9 @@ package com.example.note.data.database.addUpdate
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.example.note.domain.model.ApiNote
+import com.example.note.domain.model.InternalNote
 
-@Database(entities = [ApiNote::class], version = 1, exportSchema = false)
+@Database(entities = [InternalNote::class], version = 2, exportSchema = false)
 abstract class InternalDatabase : RoomDatabase() {
     abstract fun internalDao(): InternalDao
 }

@@ -15,7 +15,7 @@ data class Note(
     val _id: Int = 0, // retrofit is changing string apiResponse to int
 
     val heading: String? = null,
-    val content: String? = null, // TODO make content not nullable
+    val content: String? = null,
     val createDate: String? = null, // TODO make createDate and updateDate not nullable and change type to date
     val updateDate: String? = null,
     val edited: Int = 0,

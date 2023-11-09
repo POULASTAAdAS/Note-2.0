@@ -12,16 +12,18 @@ import com.example.note.data.remote.DataOrException
 import com.example.note.data.repository.InternalDatabaseImpl
 import com.example.note.data.repository.NoteRepositoryImpl
 import com.example.note.data.repository.RecentlyDeletedRepositoryImpl
-import com.example.note.domain.model.ApiNote
 import com.example.note.domain.model.ApiRequest
 import com.example.note.domain.model.ApiResponse
+import com.example.note.domain.model.InternalNote
 import com.example.note.domain.model.Note
 import com.example.note.domain.model.RecentlyDeleted
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
 import com.example.note.navigation.Screens
 import com.example.note.utils.Constants.BASE_URL
+import com.example.note.utils.convertListOfInternalNoteToNote
 import com.example.note.utils.getCurrentDate
+import com.example.note.utils.getListOfIdFromInternalNote
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -78,7 +80,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    init { // not getting called if in the same init block
+    init {
         viewModelScope.launch {
             connectivity.observe().collect {
                 network.value = it
@@ -89,6 +91,73 @@ class HomeViewModel @Inject constructor(
     private fun checkInternetConnection(): Boolean {
         return network.value == NetworkObserver.STATUS.AVAILABLE
     }
+
+
+    init {
+        Log.d("called" , "performInsertApiCallOnStart out")
+        if (autoSync.value && checkInternetConnection()) {
+            Log.d("called" , "performInsertApiCallOnStart")
+            performInsertApiCallOnStart()
+            performUpdateApiCallOnStart()
+            performDeleteApiCallOnStart()
+        }
+    }
+
+
+    private fun performInsertApiCallOnStart() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbInternal.getAllToInsert(true).collect { listOfInternalNote ->
+                networkRepository.addMultiple(
+                    token = "Bearer ${tokenOrCookie.value}",
+                    request = ApiRequest(
+                        listOfNote = convertListOfInternalNoteToNote(listOfInternalNote)
+                    )
+                ).also { apiResponse ->
+                    if (apiResponse.data != null && apiResponse.data!!.status)
+                        dbInternal.deleteMultiple(
+                            listOfId = getListOfIdFromInternalNote(listOfInternalNote)
+                        )
+                }
+            }
+        }
+    }
+
+    private fun performUpdateApiCallOnStart() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbInternal.getAllToUpdate(true).collect { listOfInternalNote ->
+                networkRepository.updateMultiple(
+                    token = "Bearer ${tokenOrCookie.value}",
+                    request = ApiRequest(
+                        listOfNote = convertListOfInternalNoteToNote(listOfInternalNote)
+                    )
+                ).also { apiResponse ->
+                    if (apiResponse.data != null && apiResponse.data!!.status)
+                        dbInternal.deleteMultiple(
+                            listOfId = getListOfIdFromInternalNote(listOfInternalNote)
+                        )
+                }
+            }
+        }
+    }
+
+    private fun performDeleteApiCallOnStart() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbInternal.getAllToDelete(true).collect { listOfId ->
+                networkRepository.deleteMultiple(
+                    token = "Bearer ${tokenOrCookie.value}",
+                    request = ApiRequest(
+                        listOfId = listOf(listOfId.toString())
+                    )
+                ).also { apiResponse ->
+                    if (apiResponse.data != null && apiResponse.data!!.status)
+                        dbInternal.deleteMultiple(
+                            listOfId = listOfId
+                        )
+                }
+            }
+        }
+    }
+
 
     // ----------------------------------------------------------------------------------
     private val appOpened = mutableStateOf(true)
@@ -154,7 +223,7 @@ class HomeViewModel @Inject constructor(
 
 
             if (firstTimeLogIn!!) getAllApiData(tokenOrCookie.value)
-            appOpened.value = false // todo this may cause bug when making api call
+            appOpened.value = false
         }
     }
 
@@ -190,7 +259,7 @@ class HomeViewModel @Inject constructor(
                         }
                     else // if apiResponse false or some unexpected error add to dbAddUpdate
                         dbInternal.addOne(
-                            apiNote = ApiNote(
+                            internalNote = InternalNote(
                                 id = note._id,
                                 heading = note.heading,
                                 content = note.content,
@@ -206,7 +275,7 @@ class HomeViewModel @Inject constructor(
                         }
                 }
             else dbInternal.addOne( // no internet add to dbAddUpdate
-                apiNote = ApiNote(
+                internalNote = InternalNote(
                     id = note._id,
                     heading = note.heading,
                     content = note.content,
@@ -242,7 +311,7 @@ class HomeViewModel @Inject constructor(
                         }
                     else // if apiResponse false or some unexpected error add to dbAddUpdate
                         dbInternal.upsert( // if exists then update else insert
-                            apiNote = ApiNote(
+                            internalNote = InternalNote(
                                 id = note._id,
                                 heading = note.heading,
                                 content = note.content,
@@ -258,7 +327,7 @@ class HomeViewModel @Inject constructor(
                         }
                 }
             else dbInternal.upsert( // no internet add to dbAddUpdate
-                apiNote = ApiNote(
+                internalNote = InternalNote(
                     id = note._id,
                     heading = note.heading,
                     content = note.content,
@@ -280,7 +349,53 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun handleDeleteApiCall(note: Note) {
-
+        viewModelScope.launch(Dispatchers.IO) {
+            if (autoSync.value && checkInternetConnection()) // if internet true api call
+                networkRepository.deleteOne(
+                    token = "Bearer ${tokenOrCookie.value}",
+                    request = ApiRequest(
+                        listOfId = listOf(
+                            note._id.toString()
+                        )
+                    )
+                ).also {
+                    if (it.data == null || !it.data!!.status) // if apiResponse false or some unexpected error add to dbInternal
+                        if (note.heading != null && note.content != null) // edge case when both are null we are aborting internal db save
+                            dbInternal.upsert( // if exists then update else insert
+                                internalNote = InternalNote(
+                                    id = note._id,
+                                    heading = note.heading,
+                                    content = note.content,
+                                    createDate = note.createDate!!,
+                                    updateDate = note.updateDate!!,
+                                    edited = note.edited,
+                                    pinned = note.pinned,
+                                    syncState = false,
+                                    delete = true
+                                )
+                            ).also {
+                                showCircularProgressIndicator.value = false
+                            }
+                }
+            else // if no internet
+                if (note.heading != null && note.content != null) // edge case when both are null we are aborting internal db save
+                    dbInternal.upsert( // if exists then update else insert
+                        internalNote = InternalNote(
+                            id = note._id,
+                            heading = note.heading,
+                            content = note.content,
+                            createDate = note.createDate!!,
+                            updateDate = note.updateDate!!,
+                            edited = note.edited,
+                            pinned = note.pinned,
+                            syncState = false,
+                            delete = true
+                        )
+                    ).also {
+                        showCircularProgressIndicator.value = false
+                    }
+                else showCircularProgressIndicator.value = false
+        }
     }
 
 
@@ -481,9 +596,6 @@ class HomeViewModel @Inject constructor(
             heading.value.trim().isEmpty() &&
             content.value.trim().isEmpty()
         ) deleteOne(note = Note(noteID.intValue), true)
-            .also {
-                // TODO handle delete edge case
-            }
         else
             if (
                 heading.value.trim() != note.value.heading ||
@@ -549,16 +661,17 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun deleteCalledFromSelectedScreen() =
-        deleteOne(note = note.value, false)
+    fun deleteCalledFromSelectedScreen() = deleteOne(note = note.value, false)
 
     private fun deleteOne(note: Note, empty: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            // todo make api call
-
             dbNote.deleteOne(note)
                 .also {
-                    if (!empty) putOneToRecentlyDeletedDatabase(note)
+                    if (empty) handleDeleteApiCall(note = Note(_id = note._id))
+                    else {
+                        putOneToRecentlyDeletedDatabase(note)
+                        handleDeleteApiCall(note = note)
+                    }
                 }
         }
     }

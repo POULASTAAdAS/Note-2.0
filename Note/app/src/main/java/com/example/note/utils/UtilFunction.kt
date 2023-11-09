@@ -5,6 +5,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.example.note.domain.model.InternalNote
+import com.example.note.domain.model.Note
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,4 +43,35 @@ fun getAnnotatedString(
             }
         } else append(it)
     }
+}
+
+fun convertListOfInternalNoteToNote(listOfInternalNote: List<InternalNote>): List<Note> {
+    val listOfNote = ArrayList<Note>()
+
+    listOfInternalNote.forEach {
+        listOfNote.add(
+            Note(
+                _id = it.id,
+                heading = it.heading,
+                content = it.content,
+                createDate = it.createDate,
+                updateDate = it.updateDate,
+                edited = it.edited,
+                pinned = it.pinned,
+                syncState = it.syncState
+            )
+        )
+    }
+
+    return listOfNote
+}
+
+fun getListOfIdFromInternalNote(listOfInternalNote: List<InternalNote>): List<Int> {
+    val listOfId = ArrayList<Int>()
+
+    listOfInternalNote.forEach {
+        listOfId.add(it.id)
+    }
+
+    return listOfId
 }

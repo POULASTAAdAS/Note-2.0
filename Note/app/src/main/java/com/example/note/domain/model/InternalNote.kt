@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import com.example.note.utils.Constants.TABLE_NAME_INTERNAL
 
 @Entity(tableName = TABLE_NAME_INTERNAL)
-data class ApiNote(
+data class InternalNote(
     @PrimaryKey
     val id: Int,
     val heading: String? = null,

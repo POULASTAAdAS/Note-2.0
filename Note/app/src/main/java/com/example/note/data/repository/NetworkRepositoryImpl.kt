@@ -71,7 +71,7 @@ class NetworkRepositoryImpl @Inject constructor(
         val result = noteApi.updateOne(token, request)
         DataOrException(data = result)
     } catch (e: Exception) {
-        Log.d("error adding multiple: ", e.message.toString())
+        Log.d("error updating single: ", e.message.toString())
         DataOrException(e = e)
     }
 
@@ -82,7 +82,7 @@ class NetworkRepositoryImpl @Inject constructor(
         val result = noteApi.updateMultiple(token, request)
         DataOrException(data = result)
     } catch (e: Exception) {
-        Log.d("error adding multiple: ", e.message.toString())
+        Log.d("error updating multiple: ", e.message.toString())
         DataOrException(e = e)
     }
 
@@ -95,7 +95,7 @@ class NetworkRepositoryImpl @Inject constructor(
         val result = noteApi.deleteOne(token, request)
         DataOrException(data = result)
     } catch (e: Exception) {
-        Log.d("error adding multiple: ", e.message.toString())
+        Log.d("error deleting one: ", e.message.toString())
         DataOrException(e = e)
     }
 
@@ -106,7 +106,7 @@ class NetworkRepositoryImpl @Inject constructor(
         val result = noteApi.deleteMultiple(token, request)
         DataOrException(data = result)
     } catch (e: Exception) {
-        Log.d("error adding multiple: ", e.message.toString())
+        Log.d("error deleting multiple: ", e.message.toString())
         DataOrException(e = e)
     }
 
