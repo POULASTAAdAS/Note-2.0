@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ApiRequest(
-    val listOfId: List<String>? = null,
+    val listOfId: List<Int>? = null,
     val note: Note? = null,
     val listOfNote: List<Note>? = null
 )

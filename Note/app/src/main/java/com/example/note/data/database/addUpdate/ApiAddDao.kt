@@ -18,9 +18,6 @@ interface InternalDao {
     @Query("delete from internalTable where id=:id")
     suspend fun deleteOne(id: Int)
 
-    @Query("select * from internalTable")
-    fun getAll(): Flow<List<InternalNote>>
-
     @Query("select * from internalTable where `insert`=:insert")
     fun getAllToInsert(insert: Boolean): Flow<List<InternalNote>>
 

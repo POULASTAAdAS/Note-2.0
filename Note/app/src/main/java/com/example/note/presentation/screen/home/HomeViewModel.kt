@@ -52,7 +52,6 @@ class HomeViewModel @Inject constructor(
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination get() = _startDestination.asStateFlow()
 
-
     private val _allData = MutableStateFlow<List<Note>>(emptyList())
     val allData: StateFlow<List<Note>> = _allData
 
@@ -75,7 +74,6 @@ class HomeViewModel @Inject constructor(
                 _startDestination.value = if (it) Screens.Home.path else Screens.Login.path
                 getAllData()
                 _isLoading.value = false
-                Log.d("readSignedInState", it.toString())
             }
         }
     }
@@ -93,31 +91,36 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    init {
-        Log.d("called" , "performInsertApiCallOnStart out")
-        if (autoSync.value && checkInternetConnection()) {
-            Log.d("called" , "performInsertApiCallOnStart")
-            performInsertApiCallOnStart()
-            performUpdateApiCallOnStart()
-            performDeleteApiCallOnStart()
-        }
+    private fun performInitialApiCall() {
+        performInsertApiCallOnStart()
+        performUpdateApiCallOnStart()
+        performDeleteApiCallOnStart()
     }
 
 
     private fun performInsertApiCallOnStart() {
         viewModelScope.launch(Dispatchers.IO) {
             dbInternal.getAllToInsert(true).collect { listOfInternalNote ->
-                networkRepository.addMultiple(
-                    token = "Bearer ${tokenOrCookie.value}",
-                    request = ApiRequest(
-                        listOfNote = convertListOfInternalNoteToNote(listOfInternalNote)
-                    )
-                ).also { apiResponse ->
-                    if (apiResponse.data != null && apiResponse.data!!.status)
-                        dbInternal.deleteMultiple(
-                            listOfId = getListOfIdFromInternalNote(listOfInternalNote)
+                if (listOfInternalNote.isNotEmpty())
+                    networkRepository.addMultiple(
+                        token = "Bearer ${tokenOrCookie.value}",
+                        request = ApiRequest(
+                            listOfNote = convertListOfInternalNoteToNote(listOfInternalNote)
                         )
-                }
+                    ).also { apiResponse ->
+                        if (apiResponse.data != null && apiResponse.data!!.status) {
+                            dbInternal.deleteMultiple(
+                                listOfId = getListOfIdFromInternalNote(listOfInternalNote)
+                            )
+
+                            listOfInternalNote.forEach {
+                                updateSyncState(
+                                    id = it.id,
+                                    state = true
+                                )
+                            }
+                        }
+                    }
             }
         }
     }
@@ -125,17 +128,26 @@ class HomeViewModel @Inject constructor(
     private fun performUpdateApiCallOnStart() {
         viewModelScope.launch(Dispatchers.IO) {
             dbInternal.getAllToUpdate(true).collect { listOfInternalNote ->
-                networkRepository.updateMultiple(
-                    token = "Bearer ${tokenOrCookie.value}",
-                    request = ApiRequest(
-                        listOfNote = convertListOfInternalNoteToNote(listOfInternalNote)
-                    )
-                ).also { apiResponse ->
-                    if (apiResponse.data != null && apiResponse.data!!.status)
-                        dbInternal.deleteMultiple(
-                            listOfId = getListOfIdFromInternalNote(listOfInternalNote)
+                if (listOfInternalNote.isNotEmpty())
+                    networkRepository.updateMultiple(
+                        token = "Bearer ${tokenOrCookie.value}",
+                        request = ApiRequest(
+                            listOfNote = convertListOfInternalNoteToNote(listOfInternalNote)
                         )
-                }
+                    ).also { apiResponse ->
+                        if (apiResponse.data != null && apiResponse.data!!.status) {
+                            dbInternal.deleteMultiple(
+                                listOfId = getListOfIdFromInternalNote(listOfInternalNote)
+                            )
+
+                            listOfInternalNote.forEach {
+                                updateSyncState(
+                                    id = it.id,
+                                    state = true
+                                )
+                            }
+                        }
+                    }
             }
         }
     }
@@ -143,17 +155,18 @@ class HomeViewModel @Inject constructor(
     private fun performDeleteApiCallOnStart() {
         viewModelScope.launch(Dispatchers.IO) {
             dbInternal.getAllToDelete(true).collect { listOfId ->
-                networkRepository.deleteMultiple(
-                    token = "Bearer ${tokenOrCookie.value}",
-                    request = ApiRequest(
-                        listOfId = listOf(listOfId.toString())
-                    )
-                ).also { apiResponse ->
-                    if (apiResponse.data != null && apiResponse.data!!.status)
-                        dbInternal.deleteMultiple(
+                if (listOfId.isNotEmpty())
+                    networkRepository.deleteMultiple(
+                        token = "Bearer ${tokenOrCookie.value}",
+                        request = ApiRequest(
                             listOfId = listOfId
                         )
-                }
+                    ).also { apiResponse ->
+                        if (apiResponse.data != null && apiResponse.data!!.status)
+                            dbInternal.deleteMultiple(
+                                listOfId = listOfId
+                            )
+                    }
             }
         }
     }
@@ -184,20 +197,17 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun updateFirstTimeLoginSate() {
         dataStoreOperation.saveFirstTimeLoginState(false)
-        Log.d("call 3", "saveFirstTimeLoginState")
     }
 
     private suspend fun readTokenOrCookie() {
         dataStoreOperation.readJWTTokenOrSession().collect {
             tokenOrCookie.value = it
-            Log.d("call 1", it)
             readFirstTimeLoginState()
         }
     }
 
     private suspend fun readFirstTimeLoginState() {
         dataStoreOperation.readFirstTimeLoginState().collect {
-            Log.d("call 2", it.toString())
             firstTimeLogIn = it
             readLogInType()
         }
@@ -206,7 +216,6 @@ class HomeViewModel @Inject constructor(
     private suspend fun readLogInType() {
         dataStoreOperation.readAuthType().collect {
             logInType = it
-            Log.d("call 4", it.toString())
             setCookie()
         }
     }
@@ -219,10 +228,9 @@ class HomeViewModel @Inject constructor(
                     mapOf("Set-Cookie" to mutableListOf(tokenOrCookie.value))
                 )
             }
-            Log.d("call 5", "cookie set")
-
 
             if (firstTimeLogIn!!) getAllApiData(tokenOrCookie.value)
+            else performInitialApiCall()
             appOpened.value = false
         }
     }
@@ -251,9 +259,9 @@ class HomeViewModel @Inject constructor(
                     )
                 ).also {
                     if (it.data?.status != null && it.data!!.status) // if apiResponse true update syncState
-                        dbNote.updateSyncState(
+                        updateSyncState(
                             id = note._id,
-                            syncState = true
+                            state = true
                         ).also {
                             showCircularProgressIndicator.value = false
                         }
@@ -302,13 +310,14 @@ class HomeViewModel @Inject constructor(
                     )
                 ).also {
                     if (it.data?.status != null && it.data!!.status)
-                        dbNote.updateSyncState( // if apiResponse true update syncState and delete from dbAddUpdate
+                        updateSyncState( // if apiResponse true update syncState and delete from dbAddUpdate
                             id = note._id,
-                            syncState = true
-                        ).also {
-                            dbInternal.deleteOne(id = note._id)
-                            showCircularProgressIndicator.value = false
-                        }
+                            state = true
+                        )
+                            .also {
+                                dbInternal.deleteOne(id = note._id)
+                                showCircularProgressIndicator.value = false
+                            }
                     else // if apiResponse false or some unexpected error add to dbAddUpdate
                         dbInternal.upsert( // if exists then update else insert
                             internalNote = InternalNote(
@@ -339,10 +348,7 @@ class HomeViewModel @Inject constructor(
                     update = true
                 )
             ).also {
-                dbNote.updateSyncState( // no internet update syncState
-                    id = note._id,
-                    syncState = false
-                )
+                updateSyncState(id = note._id, state = false) // no internet update syncState
                 showCircularProgressIndicator.value = false
             }
         }
@@ -355,7 +361,7 @@ class HomeViewModel @Inject constructor(
                     token = "Bearer ${tokenOrCookie.value}",
                     request = ApiRequest(
                         listOfId = listOf(
-                            note._id.toString()
+                            note._id
                         )
                     )
                 ).also {
@@ -405,7 +411,7 @@ class HomeViewModel @Inject constructor(
                 try {
                     dbNote.addOne(it)
                 } catch (e: IOException) {
-                    Log.d("storeAllToDB exception", e.message.toString())
+                    Log.d("error adding one: ", e.message.toString())
                 }
             }
             showCircularProgressIndicator.value = false
@@ -540,6 +546,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun updateSyncState(id: Int, state: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbNote.updateSyncState(id, state)
+        }
+    }
+
 
     fun setNoteID(id: Int) { // called from homeScreen(navigation.kt) when navigating to selected screen
         noteID.intValue = id
@@ -551,7 +563,6 @@ class HomeViewModel @Inject constructor(
             try {
                 dbNote.getOneById(noteID.intValue)
                     .collect { // this will populate all the filed which are observed from selected screen
-                        Log.d("called", it.toString())
                         heading.value = it.heading!!
                         content.value = it.content!!
                         createDate.value = it.createDate!!
@@ -643,17 +654,17 @@ class HomeViewModel @Inject constructor(
         selectAll.value = false
         listOfIdCount.intValue = 0
 
-        // todo make api call
-
         viewModelScope.launch(Dispatchers.IO) {
             dbNote.getMultipleById(
                 listOfId = listOfId.value
             ).collect {
-                for (note in it) putOneToRecentlyDeletedDatabase(note)
+                for (note in it) {
+                    putOneToRecentlyDeletedDatabase(note)
+                    handleDeleteApiCall(note)
+                }
 
                 dbNote.deleteMultiple(noteIdList = listOfId.value)
                     .also {
-                        delay(800)
                         showCircularProgressIndicator.value = false
                     }
                 listOfId.value.clear()
@@ -691,15 +702,6 @@ class HomeViewModel @Inject constructor(
                     deleteDate = getCurrentDate()
                 )
             )
-        }
-    }
-
-    fun temp() {
-        viewModelScope.launch(Dispatchers.IO) {
-            dbInternal.getAll().collect {
-                for (i in it)
-                    Log.d("addUpdateNote", i.toString())
-            }
         }
     }
 }

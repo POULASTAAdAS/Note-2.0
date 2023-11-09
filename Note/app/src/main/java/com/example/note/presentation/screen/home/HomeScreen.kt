@@ -75,8 +75,7 @@ fun HomeScreen(
                     focsManager.clearFocus() // database search is triggered from onValueChange
                 },
                 enableSearch = {
-//                    homeViewModel.searchIconClicked()
-                    homeViewModel.temp()
+                    homeViewModel.searchIconClicked()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 deleteClicked = {

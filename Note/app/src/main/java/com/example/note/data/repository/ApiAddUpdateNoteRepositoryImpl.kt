@@ -15,12 +15,9 @@ class InternalDatabaseImpl @Inject constructor(
 
     suspend fun deleteOne(id: Int) = dao.deleteOne(id)
 
-    fun getAll(): Flow<List<InternalNote>> = dao.getAll() //TODO for testing
-
     fun getAllToInsert(insert: Boolean) = dao.getAllToInsert(insert)
     fun getAllToUpdate(update: Boolean) = dao.getAllToUpdate(update)
     fun getAllToDelete(delete: Boolean) = dao.getAllToDelete(delete)
-
 
     suspend fun deleteMultiple(listOfId: List<Int>) = dao.deleteMultiple(listOfId)
 }
