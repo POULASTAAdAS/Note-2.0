@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -62,6 +64,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.note.R
 import com.example.note.domain.model.Note
+import com.example.note.presentation.screen.home.DropDown
 import com.example.note.ui.theme.background
 import com.example.note.ui.theme.forgot_text
 import com.example.note.ui.theme.google_login_button
@@ -139,6 +142,9 @@ fun DefaultIconButton(
         )
     }
 }
+
+
+
 
 
 @Composable
@@ -426,9 +432,9 @@ fun SingleCardForResearchResult(
     noteID: Int,
     heading: String?,
     content: String,
-    createDate: String, // TODO change in future
+    createDate: String,
     time: String = "",// TODO add to server database
-    navigateToDetailsScreen: (Int) -> Unit, // this will handle other optimization
+    navigateToDetailsScreen: (Int) -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -525,23 +531,41 @@ fun FilledCircle(
 @Preview
 @Composable
 private fun Preview() {
-    SingleCardForGridView(
-        note = Note(
-            heading = "heading",
-            content = "this is content",
-            pinned = true,
-            createDate = "2023-10-10",
-            syncState = false
-        ),
-        noteEditState = false,
-        searchOpen = false,
-        selectAll = false,
-        changeNoteEditState = { /*TODO*/ },
-        navigateToDetailsScreen = {},
-        selectedNoteId = { _, _ ->
+    Column {
+        SingleCardForGridView(
+            note = Note(
+                heading = "heading",
+                content = "this is content",
+                pinned = true,
+                createDate = "2023-10-10",
+                syncState = false
+            ),
+            noteEditState = false,
+            searchOpen = false,
+            selectAll = false,
+            changeNoteEditState = { /*TODO*/ },
+            navigateToDetailsScreen = {},
+            selectedNoteId = { _, _ ->
+
+            }
+        ) {
 
         }
-    ) {
 
+
+        Spacer(modifier = Modifier.height(300.dp))
+
+
+//        MoreVertical(
+//            expanded = true,
+//            autoSyncText = "autoSync",
+//            sortStateText = "sortStateText",
+//            noteViewText = "noteViewText",
+//            changeExpandState = { /*TODO*/ },
+//            changeAutoSync = { /*TODO*/ },
+//            changeSortState = { /*TODO*/ },
+//            changeNoteView = { /*TODO*/ },
+//            recentlyDeletedClicked = { /*TODO*/ }
+//        )
     }
 }

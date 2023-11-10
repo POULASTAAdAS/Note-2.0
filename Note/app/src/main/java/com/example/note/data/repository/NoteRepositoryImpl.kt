@@ -10,7 +10,7 @@ import javax.inject.Inject
 class NoteRepositoryImpl @Inject constructor(
     private val noteDao: NoteDao
 ) {
-    fun getAllByPinnedAndUpdateDate() = noteDao.getAllByPinnedAndUpdateDate()
+    fun getAllByPinnedAndCreateDate() = noteDao.getAllByPinnedAndCreateDate()
     fun getAllByPinnedAndEdited() = noteDao.getAllByPinnedAndEdited()
 
     fun getOneById(id: Int) = noteDao.getOneById(id)
@@ -29,4 +29,5 @@ class NoteRepositoryImpl @Inject constructor(
     fun searchNotes(searchQuery: String): Flow<List<Note>> = noteDao.searchNotes(searchQuery)
 
     suspend fun updateSyncState(id: Int, syncState: Boolean) = noteDao.updateSyncState(id , syncState)
+    suspend fun updatePinedState(id: Int) = noteDao.updatePinedState(id)
 }

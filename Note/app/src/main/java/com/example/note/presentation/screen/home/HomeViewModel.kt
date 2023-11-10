@@ -30,6 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.net.CookieManager
@@ -57,13 +58,18 @@ class HomeViewModel @Inject constructor(
 
     private fun getAllData() {
         viewModelScope.launch(Dispatchers.IO) {
-            dbNote.getAllByPinnedAndUpdateDate().collect {
+            if (sortState.value)
+                dbNote.getAllByPinnedAndCreateDate().collect {
+                    _allData.value = it
+                    _isLoading.value = false
+                }
+            else dbNote.getAllByPinnedAndEdited().collect {
                 _allData.value = it
+                _isLoading.value = false
             }
         }
     }
 
-    private val autoSync = mutableStateOf(true)
 
     var network = mutableStateOf(NetworkObserver.STATUS.UNAVAILABLE)
         private set
@@ -73,10 +79,10 @@ class HomeViewModel @Inject constructor(
             dataStoreOperation.readSignedInState().collect {
                 _startDestination.value = if (it) Screens.Home.path else Screens.Login.path
                 getAllData()
-                _isLoading.value = false
             }
         }
     }
+
 
     init {
         viewModelScope.launch {
@@ -89,6 +95,61 @@ class HomeViewModel @Inject constructor(
     private fun checkInternetConnection(): Boolean {
         return network.value == NetworkObserver.STATUS.AVAILABLE
     }
+
+    val autoSync = mutableStateOf(true)
+    private val sortState = mutableStateOf(true)
+    private val noteView = mutableStateOf(false)
+
+
+    init {
+        readAutoSyncState()
+        readSortState()
+        readNoteViewSate()
+    }
+
+
+    private fun readAutoSyncState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.readAutoSyncState().collect {
+                autoSync.value = it
+                delay(400)
+                if (!it) autoSyncText.value = "On Auto Sync"
+                else autoSyncText.value = "Off Auto Sync"
+            }
+        }
+    }
+
+    private fun readSortState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.readSortState().collect {
+                sortState.value = it
+                delay(400)
+                if (it) sortStateText.value = "Sort by Last Edited"
+                else sortStateText.value = "Sort by Create Date"
+            }
+        }
+    }
+
+    private fun readNoteViewSate() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.readNoteViewState().collect {
+                noteView.value = it
+                delay(400)
+                noteViewText.value = if (it) "Grid view"
+                else "List View"
+            }
+        }
+    }
+
+    private suspend fun updateAutoSync() =
+        dataStoreOperation.saveAutoSyncState(autoSync.value)
+
+
+    private suspend fun updateSortState() =
+        dataStoreOperation.saveSortState(sortState.value)
+
+    private suspend fun updateNoteView() =
+        dataStoreOperation.saveNoteViewState(noteView.value)
 
 
     private fun performInitialApiCall() {
@@ -429,6 +490,7 @@ class HomeViewModel @Inject constructor(
     val searchOpen = mutableStateOf(false)
     val searchTriggered = mutableStateOf(false)
 
+
     val selectAll = mutableStateOf(false)
     val noteEditState = mutableStateOf(false)
 
@@ -437,6 +499,49 @@ class HomeViewModel @Inject constructor(
 
     var searchResult = MutableStateFlow<List<Note>>(emptyList())
         private set
+
+    val expandState = mutableStateOf(false)
+
+    val autoSyncText = mutableStateOf("Off Auto Sync") // On Auto Sync
+    val sortStateText = mutableStateOf("Sort by Last Edited") // Sort by Create Date
+    val noteViewText = mutableStateOf("List View") // Grid view
+
+    fun changeExpandState() {
+        expandState.value = !expandState.value
+    }
+
+    fun turnOnAutoSync() {
+        autoSync.value = true
+        viewModelScope.launch(Dispatchers.IO) {
+            updateAutoSync()
+            showCustomToast.value = false
+        }
+    }
+
+    fun changeAutoSync() {
+        expandState.value = false
+        autoSync.value = !autoSync.value
+        viewModelScope.launch(Dispatchers.IO) {
+            updateAutoSync()
+        }
+    }
+
+    fun changeSortState() {
+        expandState.value = false
+        sortState.value = !sortState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            updateSortState()
+        }
+    }
+
+    fun changeNoteView() {
+        expandState.value = false
+        noteView.value = !noteView.value
+        viewModelScope.launch(Dispatchers.IO) {
+            updateNoteView()
+
+        }
+    }
 
     private fun listOfIdCountAdd() = listOfIdCount.intValue++
     private fun listOfIdCountMinus() = listOfIdCount.intValue--
@@ -456,12 +561,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun showCustomToast() {
-        viewModelScope.launch {
-            if (!checkInternetConnection()) {
-                showCustomToast.value = true
-                delay(4000)
-            } else showCustomToast.value = false
-        }
+        showCustomToast.value = !checkInternetConnection()
     }
 
 
@@ -551,6 +651,27 @@ class HomeViewModel @Inject constructor(
             dbNote.updateSyncState(id, state)
         }
     }
+
+
+    fun updatePinnedState() {
+        showCircularProgressIndicator.value = true
+        noteEditState.value = false
+        listOfIdCount.intValue = 0
+        selectAll.value = false
+
+        viewModelScope.launch {
+            listOfId.value.forEach {
+                updatePinnedState(it)
+            }.also {
+                listOfId.value.clear()
+                showCircularProgressIndicator.value = false
+            }
+        }
+    }
+
+
+    private suspend fun updatePinnedState(id: Int) =
+        dbNote.updatePinedState(id)
 
 
     fun setNoteID(id: Int) { // called from homeScreen(navigation.kt) when navigating to selected screen

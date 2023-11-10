@@ -3,7 +3,7 @@ package com.example.note.presentation.screen.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -55,6 +55,12 @@ fun HomeScreen(
     val noteEditState by homeViewModel.noteEditState
     val selectAll by homeViewModel.selectAll
 
+    val expandState by homeViewModel.expandState
+
+    val autoSyncText by homeViewModel.autoSyncText
+    val sortStateText by homeViewModel.sortStateText
+    val noteViewText by homeViewModel.noteViewText
+
     Scaffold(
         topBar = {
             HomeTopBar(
@@ -86,9 +92,29 @@ fun HomeScreen(
                     homeViewModel.clearClicked()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
-                threeDotClicked = {
-                    // TODO crate settings screen and selectAll button and pin and new idea
+                pinnedClicked = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    homeViewModel.updatePinnedState()
+                },
+                expanded = expandState,
+                autoSyncText = autoSyncText,
+                sortStateText = sortStateText,
+                noteViewText = noteViewText,
+                changeExpandState = {
+                    homeViewModel.changeExpandState()
+                },
+                changeAutoSync = {
+                    homeViewModel.changeAutoSync()
+                },
+                changeSortState = {
+                    homeViewModel.changeSortState()
+                },
+                changeNoteView = {
+                    homeViewModel.changeNoteView()
+                },
+                navigateToRecentlyDeleted = {
+                    homeViewModel.changeExpandState()
+                    // TODO navigate to recently deleted
                 }
             )
         },
@@ -106,11 +132,9 @@ fun HomeScreen(
                 visible = floatingNewButton.value,
                 enter = fadeIn(
                     animationSpec = tween(800)
-                ) + slideInHorizontally(
-                    animationSpec = tween(1000),
-                    initialOffsetX = {
-                        it / 2
-                    }
+                ) + slideInVertically(
+                    animationSpec = tween(900),
+                    initialOffsetY = { it }
                 )
             ) {
                 FloatingNewButton {
@@ -121,7 +145,7 @@ fun HomeScreen(
         }
     ) { paddingValues ->
         HomeScreenContent(
-            showCustomToast = customToast,
+            customToastState = customToast,
             searchQuery = searchText,
             paddingValues = paddingValues,
             allData = allData,

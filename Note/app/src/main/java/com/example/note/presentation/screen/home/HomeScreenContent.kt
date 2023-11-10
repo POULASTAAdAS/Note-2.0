@@ -30,14 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import com.example.note.domain.model.Note
-import com.example.note.presentation.common.CustomToast
+import com.example.note.presentation.common.CustomToastInternet
 import com.example.note.presentation.common.SingleCardForGridView
 import com.example.note.presentation.common.SingleCardForResearchResult
-import com.example.note.ui.theme.dark_url_color
 
 @Composable
 fun HomeScreenContent(
-    showCustomToast: Boolean,
+    customToastState: Boolean,
     searchQuery: String,
     paddingValues: PaddingValues,
     allData: List<Note>,
@@ -49,7 +48,7 @@ fun HomeScreenContent(
     changeNoteEditState: () -> Unit,
     navigateToDetailsScreen: (Int) -> Unit,
     selectedNoteId: (Int, Boolean) -> Unit,
-    columnClicked: () -> Unit
+    columnClicked: () -> Unit,
 ) {
     val animateBlur by animateDpAsState(
         targetValue = if (searchOpen && !searchTriggered) 2.dp else 0.dp,
@@ -77,7 +76,7 @@ fun HomeScreenContent(
         verticalArrangement = Arrangement.Center
     ) {
         AnimatedVisibility(
-            visible = showCustomToast,
+            visible = customToastState,
             enter = fadeIn(
                 animationSpec = tween(1_000)
             ) + expandVertically(
@@ -89,13 +88,10 @@ fun HomeScreenContent(
                 animationSpec = tween(durationMillis = 1_000)
             )
         ) {
-            val temp = remember(this) { showCustomToast }
+            val toast = remember(this) { customToastState }
 
-            if (temp)
-                CustomToast(
-                    "No Internet connection auto sync of",
-                    color = dark_url_color
-                )
+            if (toast)
+                CustomToastInternet()
         }
 
         if (allData.isNotEmpty())

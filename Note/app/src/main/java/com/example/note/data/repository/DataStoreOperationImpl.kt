@@ -8,9 +8,12 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.utils.Constants.AUTH_TYPE_KEY
+import com.example.note.utils.Constants.AUTO_SYNC_KEY
+import com.example.note.utils.Constants.NOTE_VIEW_KEY
 import com.example.note.utils.Constants.PREFERENCES_FIRST_TIME_SIGNED_IN_KEY
 import com.example.note.utils.Constants.PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY
 import com.example.note.utils.Constants.PREFERENCES_SIGNED_IN_KEY
+import com.example.note.utils.Constants.SORT_STATE_KEY
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -24,7 +27,12 @@ class DataStoreOperationImpl @Inject constructor(
         val signedInKey = booleanPreferencesKey(name = PREFERENCES_SIGNED_IN_KEY)
         val firstLogInState = booleanPreferencesKey(name = PREFERENCES_FIRST_TIME_SIGNED_IN_KEY)
         val authType = booleanPreferencesKey(name = AUTH_TYPE_KEY)
-        val jwtTokenKey = stringPreferencesKey(name = PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY) // if true google auth else jwt
+        val jwtTokenKey =
+            stringPreferencesKey(name = PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY) // if true google auth else jwt
+
+        val autoSyncKey = booleanPreferencesKey(name = AUTO_SYNC_KEY)
+        val sortStateKey = booleanPreferencesKey(name = SORT_STATE_KEY)
+        val noteViewKey = booleanPreferencesKey(name = NOTE_VIEW_KEY)
     }
 
     override suspend fun saveUpdateSignedInState(signedInState: Boolean) {
@@ -99,5 +107,63 @@ class DataStoreOperationImpl @Inject constructor(
         }.map {
             val authType = it[PreferencesKey.authType] ?: false
             authType
+        }
+
+
+    override suspend fun saveAutoSyncState(value: Boolean) {
+        dataStore.edit {
+            it[PreferencesKey.autoSyncKey] = value
+        }
+    }
+
+    override fun readAutoSyncState(): Flow<Boolean> = dataStore
+        .data
+        .catch { e ->
+            if (e is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw e
+            }
+        }.map {
+            val autoSync = it[PreferencesKey.autoSyncKey] ?: true
+            autoSync
+        }
+
+    override suspend fun saveSortState(value: Boolean) {
+        dataStore.edit {
+            it[PreferencesKey.sortStateKey] = value
+        }
+    }
+
+    override fun readSortState(): Flow<Boolean> = dataStore
+        .data
+        .catch { e ->
+            if (e is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw e
+            }
+        }.map {
+            val sortState = it[PreferencesKey.sortStateKey] ?: true
+            sortState
+        }
+
+    override suspend fun saveNoteViewState(value: Boolean) {
+        dataStore.edit {
+            it[PreferencesKey.noteViewKey] = value
+        }
+    }
+
+    override fun readNoteViewState(): Flow<Boolean> = dataStore
+        .data
+        .catch { e ->
+            if (e is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw e
+            }
+        }.map {
+            val noteView = it[PreferencesKey.noteViewKey] ?: true
+            noteView
         }
 }

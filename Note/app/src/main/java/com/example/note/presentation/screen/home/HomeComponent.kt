@@ -1,5 +1,6 @@
 package com.example.note.presentation.screen.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,8 @@ import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -33,10 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.note.R
 import com.example.note.presentation.common.DefaultIconButton
 import com.example.note.ui.theme.dark_primary
 import com.example.note.ui.theme.google_login_button
@@ -59,7 +64,17 @@ fun HomeTopBar(
     enableSearch: () -> Unit,
     clearClicked: () -> Unit,
     deleteClicked: () -> Unit,
-    threeDotClicked: () -> Unit,
+    pinnedClicked: () -> Unit,
+    // three dot
+    expanded: Boolean,
+    autoSyncText: String,
+    sortStateText: String,
+    noteViewText: String,
+    changeExpandState: () -> Unit,
+    changeAutoSync: () -> Unit,
+    changeSortState: () -> Unit,
+    changeNoteView: () -> Unit,
+    navigateToRecentlyDeleted: () -> Unit
 ) {
     val focusRequester = remember {
         FocusRequester()
@@ -149,10 +164,32 @@ fun HomeTopBar(
                             onClick = enableSearch
                         )
 
-                    DefaultIconButton(
-                        onClick = threeDotClicked,
-                        icon = Icons.Rounded.MoreVert
-                    )
+                    if (noteEditState)
+                        IconButton(
+                            onClick = pinnedClicked,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.inversePrimary
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_pin),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                            )
+                        }
+                    else
+                        MoreVertical(
+                            expanded = expanded,
+                            autoSyncText = autoSyncText,
+                            sortStateText = sortStateText,
+                            noteViewText = noteViewText,
+                            changeExpandState = changeExpandState,
+                            changeAutoSync = changeAutoSync,
+                            changeSortState = changeSortState,
+                            changeNoteView = changeNoteView,
+                            navigateToRecentlyDeleted = navigateToRecentlyDeleted
+                        )
                 }
         },
         navigationIcon = {
@@ -190,28 +227,106 @@ fun FloatingNewButton(
 }
 
 
+@Composable
+fun MoreVertical(
+    expanded: Boolean,
+    autoSyncText: String,
+    sortStateText: String,
+    noteViewText: String,
+    changeExpandState: () -> Unit,
+    changeAutoSync: () -> Unit,
+    changeSortState: () -> Unit,
+    changeNoteView: () -> Unit,
+    navigateToRecentlyDeleted: () -> Unit
+) {
+    IconButton(
+        onClick = changeExpandState,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            contentColor = MaterialTheme.colorScheme.inversePrimary
+        ),
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.MoreVert,
+            contentDescription = null,
+        )
+
+        DropDown(
+            expanded = expanded,
+            autoSyncText = autoSyncText,
+            sortStateText = sortStateText,
+            noteViewText = noteViewText,
+            changeExpandState = changeExpandState,
+            changeAutoSync = changeAutoSync,
+            changeSortState = changeSortState,
+            changeNoteView = changeNoteView,
+            navigateToRecentlyDeleted = navigateToRecentlyDeleted
+        )
+    }
+}
+
+@Composable
+fun DropDown(
+    expanded: Boolean,
+    autoSyncText: String,
+    sortStateText: String,
+    noteViewText: String,
+    changeExpandState: () -> Unit,
+    changeAutoSync: () -> Unit,
+    changeSortState: () -> Unit,
+    changeNoteView: () -> Unit,
+    navigateToRecentlyDeleted: () -> Unit,
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = changeExpandState,
+        modifier = Modifier.background(
+            color = MaterialTheme.colorScheme.primary.copy(.3f)
+        )
+    ) {
+        DefaultDropDownItem(text = autoSyncText) {
+            changeExpandState()
+            changeAutoSync()
+        }
+
+        DefaultDropDownItem(text = sortStateText) {
+            changeExpandState()
+            changeSortState()
+        }
+
+        DefaultDropDownItem(text = noteViewText) {
+            changeExpandState()
+            changeNoteView()
+        }
+
+        DefaultDropDownItem(
+            text = "Recently Deleted",
+            onClick = navigateToRecentlyDeleted
+        )
+    }
+}
+
+
+@Composable
+fun DefaultDropDownItem(
+    text: String,
+    onClick: () -> Unit
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = text,
+                color = MaterialTheme.colorScheme.inversePrimary
+            )
+        },
+        onClick = onClick
+    )
+}
+
+
 @Preview
 @Composable
 private fun Preview() {
     Column {
-        HomeTopBar(
-            showCircularProgressIndicator = false,
-            noteEditState = true,
-            enableSearch = {},
-            deleteClicked = {},
-            clearClicked = {},
-            searchOpen = false,
-            selectAll = false,
-            searchText = "",
-            searchTextChange = {
-
-            },
-            searchClicked = {},
-            threeDotClicked = {},
-            selectedNumber = 5,
-            selectAllClicked = {}
-        )
-
         FloatingNewButton {
 
         }

@@ -14,4 +14,13 @@ interface DataStoreOperation {
 
     suspend fun saveAuthenticationType(authType: Boolean)
     fun readAuthType(): Flow<Boolean>
+
+    suspend fun saveAutoSyncState(value: Boolean)
+    fun readAutoSyncState(): Flow<Boolean>
+
+    suspend fun saveSortState(value: Boolean)
+    fun readSortState(): Flow<Boolean>
+
+    suspend fun saveNoteViewState(value: Boolean)
+    fun readNoteViewState(): Flow<Boolean>
 }

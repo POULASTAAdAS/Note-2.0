@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,14 +19,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.note.ui.theme.url_color
 
 @Composable
-fun CustomToast(
-    text: String,
+fun CustomToastInternet(
     icon: ImageVector = Icons.Rounded.Warning,
-    color: Color,
+    color: Color = url_color,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -38,7 +39,7 @@ fun CustomToast(
             Text(
                 modifier = Modifier
                     .padding(10.dp),
-                text = text,
+                text = "No Internet connection auto sync of",
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = MaterialTheme.typography.labelLarge.fontSize,
@@ -54,11 +55,38 @@ fun CustomToast(
     }
 }
 
-@Preview
 @Composable
-private fun Preview() {
-    CustomToast(
-        "No Internet connection",
-        color = MaterialTheme.colorScheme.inversePrimary
-    )
+fun CustomAutoSyncOff(
+    color: Color = url_color,
+    turnOnAutoSync: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primary
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier
+                    .padding(10.dp),
+                text = "Turn on auto sync to save your notes\n to the server",
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = MaterialTheme.typography.labelLarge.fontSize,
+                color = color
+            )
+
+            Button(
+                onClick = turnOnAutoSync, colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = url_color
+                )
+            ) {
+                Text(text = "Turn on")
+            }
+        }
+    }
 }
