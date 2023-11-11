@@ -1,6 +1,8 @@
 package com.example.note.presentation.screen.home
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +18,7 @@ import com.example.note.domain.model.ApiRequest
 import com.example.note.domain.model.ApiResponse
 import com.example.note.domain.model.InternalNote
 import com.example.note.domain.model.Note
-import com.example.note.domain.model.RecentlyDeleted
+import com.example.note.domain.model.RecentlyDeletedNotes
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
 import com.example.note.navigation.Screens
@@ -30,7 +32,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.net.CookieManager
@@ -96,7 +97,7 @@ class HomeViewModel @Inject constructor(
         return network.value == NetworkObserver.STATUS.AVAILABLE
     }
 
-    val autoSync = mutableStateOf(true)
+    private val autoSync = mutableStateOf(true)
     private val sortState = mutableStateOf(true)
     private val noteView = mutableStateOf(false)
 
@@ -310,7 +311,7 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    private fun handleApiAddApiCall(note: Note) {
+    private fun handleAddApiCall(note: Note) {
         viewModelScope.launch(Dispatchers.IO) {
             if (autoSync.value && checkInternetConnection()) // if internet true api call
                 networkRepository.addOne(
@@ -518,12 +519,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun changeAutoSync() {
+    fun changeAutoSync(context: Context) {
         expandState.value = false
         autoSync.value = !autoSync.value
         viewModelScope.launch(Dispatchers.IO) {
             updateAutoSync()
         }
+
+        if (!autoSync.value)
+            Toast.makeText(
+                context,
+                "Turn on auto sync to save your notes to the server",
+                Toast.LENGTH_LONG
+            ).show()
     }
 
     fun changeSortState() {
@@ -706,7 +714,7 @@ class HomeViewModel @Inject constructor(
                     updateDate = createDate
                 )
             ).also {
-                handleApiAddApiCall(
+                handleAddApiCall(
                     note = Note(
                         _id = it.toInt(),
                         heading = heading.value,
@@ -811,7 +819,7 @@ class HomeViewModel @Inject constructor(
     private fun putOneToRecentlyDeletedDatabase(note: Note) {
         viewModelScope.launch(Dispatchers.IO) {
             dbRecentlyDeleted.addOne(
-                recentlyDeleted = RecentlyDeleted(
+                recentlyDeletedNotes = RecentlyDeletedNotes(
                     id = note._id,
                     heading = note.heading,
                     content = note.content,

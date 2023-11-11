@@ -543,7 +543,7 @@ private fun Preview() {
             noteEditState = false,
             searchOpen = false,
             selectAll = false,
-            changeNoteEditState = { /*TODO*/ },
+            changeNoteEditState = { },
             navigateToDetailsScreen = {},
             selectedNoteId = { _, _ ->
 
@@ -551,21 +551,5 @@ private fun Preview() {
         ) {
 
         }
-
-
-        Spacer(modifier = Modifier.height(300.dp))
-
-
-//        MoreVertical(
-//            expanded = true,
-//            autoSyncText = "autoSync",
-//            sortStateText = "sortStateText",
-//            noteViewText = "noteViewText",
-//            changeExpandState = { /*TODO*/ },
-//            changeAutoSync = { /*TODO*/ },
-//            changeSortState = { /*TODO*/ },
-//            changeNoteView = { /*TODO*/ },
-//            recentlyDeletedClicked = { /*TODO*/ }
-//        )
     }
 }

@@ -16,7 +16,7 @@ data class Note(
 
     val heading: String? = null,
     val content: String? = null,
-    val createDate: String? = null, // TODO make createDate and updateDate not nullable and change type to date
+    val createDate: String? = null,
     val updateDate: String? = null,
     val edited: Int = 0,
     val pinned: Boolean = false,

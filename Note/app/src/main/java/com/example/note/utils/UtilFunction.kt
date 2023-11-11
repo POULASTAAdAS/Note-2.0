@@ -7,6 +7,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.example.note.domain.model.InternalNote
 import com.example.note.domain.model.Note
+import com.example.note.domain.model.RecentlyDeletedNotes
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -75,3 +76,13 @@ fun getListOfIdFromInternalNote(listOfInternalNote: List<InternalNote>): List<In
 
     return listOfId
 }
+
+fun convertRecentlyDeletedNoteToNote(recentlyDeletedNotes: RecentlyDeletedNotes) = Note(
+    heading = recentlyDeletedNotes.heading,
+    content = recentlyDeletedNotes.content,
+    createDate = recentlyDeletedNotes.createDate,
+    updateDate = recentlyDeletedNotes.updateDate,
+    edited = recentlyDeletedNotes.edited,
+    pinned = recentlyDeletedNotes.pinned,
+    syncState = recentlyDeletedNotes.syncState
+)

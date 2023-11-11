@@ -73,11 +73,11 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // dagger hilt
-    implementation("com.google.dagger:hilt-android:2.47")
+    implementation("com.google.dagger:hilt-android:2.48")
     kapt("com.google.dagger:hilt-android-compiler:2.47")
     kapt ("androidx.hilt:hilt-compiler:1.1.0")
     implementation ("androidx.hilt:hilt-navigation-compose:1.1.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // retrofit , okhttp
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")

@@ -293,10 +293,10 @@ fun DropDown(
             changeSortState()
         }
 
-        DefaultDropDownItem(text = noteViewText) {
-            changeExpandState()
-            changeNoteView()
-        }
+//        DefaultDropDownItem(text = noteViewText) {
+//            changeExpandState()
+//            changeNoteView()
+//        }
 
         DefaultDropDownItem(
             text = "Recently Deleted",

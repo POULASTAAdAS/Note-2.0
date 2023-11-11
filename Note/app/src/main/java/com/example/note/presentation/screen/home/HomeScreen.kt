@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 
@@ -21,7 +22,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 fun HomeScreen(
     homeViewModel: HomeViewModel,
     navigateToDetailsScreen: (Int) -> Unit,
-    navigateToNew: () -> Unit
+    navigateToNew: () -> Unit,
+    navigateToRecentlyDeleted: () -> Unit
 ) {
     val showCircularProgressIndicator by homeViewModel.showCircularProgressIndicator
 
@@ -60,6 +62,8 @@ fun HomeScreen(
     val autoSyncText by homeViewModel.autoSyncText
     val sortStateText by homeViewModel.sortStateText
     val noteViewText by homeViewModel.noteViewText
+
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -104,7 +108,7 @@ fun HomeScreen(
                     homeViewModel.changeExpandState()
                 },
                 changeAutoSync = {
-                    homeViewModel.changeAutoSync()
+                    homeViewModel.changeAutoSync(context = context)
                 },
                 changeSortState = {
                     homeViewModel.changeSortState()
@@ -114,7 +118,7 @@ fun HomeScreen(
                 },
                 navigateToRecentlyDeleted = {
                     homeViewModel.changeExpandState()
-                    // TODO navigate to recently deleted
+                    navigateToRecentlyDeleted()
                 }
             )
         },

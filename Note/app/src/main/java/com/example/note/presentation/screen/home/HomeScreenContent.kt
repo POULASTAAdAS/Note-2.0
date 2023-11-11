@@ -108,8 +108,8 @@ fun HomeScreenContent(
                     changeNoteEditState = changeNoteEditState,
                     searchOpen = searchOpen,
                     navigateToDetailsScreen = navigateToDetailsScreen,
-                    selectedNoteId = { it1, it2 ->
-                        selectedNoteId(it1, it2)
+                    selectedNoteId = { id, selectState ->
+                        selectedNoteId(id, selectState)
                     },
                     selectAll = selectAll,
                     columnClicked = columnClicked

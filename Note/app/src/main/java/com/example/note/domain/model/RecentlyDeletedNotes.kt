@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import com.example.note.utils.Constants.TABLE_NAME_RECENTLY_DELETED
 
 @Entity(tableName = TABLE_NAME_RECENTLY_DELETED)
-data class RecentlyDeleted(
+data class RecentlyDeletedNotes(
     @PrimaryKey
     val id: Int,
     val heading: String? = null,
