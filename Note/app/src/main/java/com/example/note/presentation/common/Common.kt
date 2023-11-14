@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -64,7 +62,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.note.R
 import com.example.note.domain.model.Note
-import com.example.note.presentation.screen.home.DropDown
 import com.example.note.ui.theme.background
 import com.example.note.ui.theme.forgot_text
 import com.example.note.ui.theme.google_login_button
@@ -76,6 +73,7 @@ import com.example.note.utils.getAnnotatedString
 @Composable
 fun LoginTextField(
     value: String,
+    enabled: Boolean = true,
     shape: RoundedCornerShape = RoundedCornerShape(40.dp),
     singleLine: Boolean = true,
     label: String,
@@ -104,6 +102,7 @@ fun LoginTextField(
             .fillMaxWidth(),
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         colors = colors,
         label = {
             Text(text = label)

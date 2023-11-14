@@ -17,7 +17,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.note.R
 import com.example.note.domain.model.RecentlyDeletedNotes
+import com.example.note.presentation.screen.empty.EmptyScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,28 +75,33 @@ fun RecentlyDeletedContent(
                 bottom = paddingValues.calculateBottomPadding()
             )
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding(),
-            contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(
-                items = recentlyDeletedNote,
-                key = {
-                    it.id
-                }
+        if (recentlyDeletedNote.isNotEmpty())
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding(),
+                contentPadding = PaddingValues(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                RecentlyDeletedSingleCard(
-                    noteId = it.id,
-                    heading = it.heading ?: "",
-                    content = it.content ?: "",
-                    createDate = it.createDate,
-                    recoverClicked = recoverClicked,
-                    deleteOne = deleteOne
-                )
+                items(
+                    items = recentlyDeletedNote,
+                    key = {
+                        it.id
+                    }
+                ) {
+                    RecentlyDeletedSingleCard(
+                        noteId = it.id,
+                        heading = it.heading ?: "",
+                        content = it.content ?: "",
+                        createDate = it.createDate,
+                        recoverClicked = recoverClicked,
+                        deleteOne = deleteOne
+                    )
+                }
             }
-        }
+        else EmptyScreen(
+            lottie = R.raw.empty_recently_deleted_screen,
+            modifier = Modifier.padding(start = 90.dp, top = 90.dp, end = 90.dp, bottom = 50.dp)
+        )
     }
 }

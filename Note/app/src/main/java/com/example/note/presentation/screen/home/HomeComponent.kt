@@ -47,11 +47,13 @@ import com.example.note.ui.theme.dark_primary
 import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.non_Sync
 import com.example.note.ui.theme.place_holder
+import com.example.note.ui.theme.url_color
+import com.example.note.utils.modifyUserName
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(
-    userName: String = "Poulastaa", // todo get from email as apiResponse when user loges in
+    userName: String,
     showCircularProgressIndicator: Boolean,
     selectAll: Boolean,
     noteEditState: Boolean,
@@ -69,11 +71,10 @@ fun HomeTopBar(
     expanded: Boolean,
     autoSyncText: String,
     sortStateText: String,
-    noteViewText: String,
     changeExpandState: () -> Unit,
     changeAutoSync: () -> Unit,
     changeSortState: () -> Unit,
-    changeNoteView: () -> Unit,
+    settingsClicked: () -> Unit,
     navigateToRecentlyDeleted: () -> Unit
 ) {
     val focusRequester = remember {
@@ -131,11 +132,24 @@ fun HomeTopBar(
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = if (noteEditState) "  $selectedNumber" else "Hi $userName...",
-                        fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                        modifier = Modifier.weight(1f)
-                    )
+                    if (noteEditState)
+                        Text(
+                            text = "$selectedNumber",
+                            fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                            modifier = Modifier.weight(1f)
+                        )
+                    else
+                        Text(
+                            text = modifyUserName(
+                                text = userName,
+                                color = url_color,
+                                fontSize = MaterialTheme.typography.headlineMedium.fontSize
+                            ),
+                            fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            softWrap = false
+                        )
 
                     if (showCircularProgressIndicator) {
                         CircularProgressIndicator(
@@ -183,11 +197,10 @@ fun HomeTopBar(
                             expanded = expanded,
                             autoSyncText = autoSyncText,
                             sortStateText = sortStateText,
-                            noteViewText = noteViewText,
                             changeExpandState = changeExpandState,
                             changeAutoSync = changeAutoSync,
                             changeSortState = changeSortState,
-                            changeNoteView = changeNoteView,
+                            settingsClicked = settingsClicked,
                             navigateToRecentlyDeleted = navigateToRecentlyDeleted
                         )
                 }
@@ -232,11 +245,10 @@ fun MoreVertical(
     expanded: Boolean,
     autoSyncText: String,
     sortStateText: String,
-    noteViewText: String,
     changeExpandState: () -> Unit,
     changeAutoSync: () -> Unit,
     changeSortState: () -> Unit,
-    changeNoteView: () -> Unit,
+    settingsClicked: () -> Unit,
     navigateToRecentlyDeleted: () -> Unit
 ) {
     IconButton(
@@ -250,30 +262,28 @@ fun MoreVertical(
             contentDescription = null,
         )
 
-        DropDown(
+        HomeScreenMoreVertDropDown(
             expanded = expanded,
             autoSyncText = autoSyncText,
             sortStateText = sortStateText,
-            noteViewText = noteViewText,
             changeExpandState = changeExpandState,
             changeAutoSync = changeAutoSync,
             changeSortState = changeSortState,
-            changeNoteView = changeNoteView,
+            settingsClicked = settingsClicked,
             navigateToRecentlyDeleted = navigateToRecentlyDeleted
         )
     }
 }
 
 @Composable
-fun DropDown(
+fun HomeScreenMoreVertDropDown(
     expanded: Boolean,
     autoSyncText: String,
     sortStateText: String,
-    noteViewText: String,
     changeExpandState: () -> Unit,
     changeAutoSync: () -> Unit,
     changeSortState: () -> Unit,
-    changeNoteView: () -> Unit,
+    settingsClicked: () -> Unit,
     navigateToRecentlyDeleted: () -> Unit,
 ) {
     DropdownMenu(
@@ -293,15 +303,15 @@ fun DropDown(
             changeSortState()
         }
 
-//        DefaultDropDownItem(text = noteViewText) {
-//            changeExpandState()
-//            changeNoteView()
-//        }
-
         DefaultDropDownItem(
             text = "Recently Deleted",
             onClick = navigateToRecentlyDeleted
         )
+
+        DefaultDropDownItem(text = "Settings") {
+            changeExpandState()
+            settingsClicked()
+        }
     }
 }
 

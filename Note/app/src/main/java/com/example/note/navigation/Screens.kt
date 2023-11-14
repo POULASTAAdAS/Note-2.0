@@ -9,4 +9,5 @@ sealed class Screens(val path: String) {
     data object Selected : Screens("selected_screen")
 
     data object RecentlyDeleted : Screens("recently_deleted")
+    data object Settings : Screens("settings")
 }

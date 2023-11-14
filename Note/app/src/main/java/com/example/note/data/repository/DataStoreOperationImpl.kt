@@ -7,13 +7,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.note.domain.repository.DataStoreOperation
-import com.example.note.utils.Constants.AUTH_TYPE_KEY
-import com.example.note.utils.Constants.AUTO_SYNC_KEY
-import com.example.note.utils.Constants.NOTE_VIEW_KEY
+import com.example.note.utils.Constants.PREFERENCES_AUTH_TYPE_KEY
+import com.example.note.utils.Constants.PREFERENCES_AUTO_SYNC_KEY
 import com.example.note.utils.Constants.PREFERENCES_FIRST_TIME_SIGNED_IN_KEY
 import com.example.note.utils.Constants.PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY
+import com.example.note.utils.Constants.PREFERENCES_NOTE_VIEW_KEY
 import com.example.note.utils.Constants.PREFERENCES_SIGNED_IN_KEY
-import com.example.note.utils.Constants.SORT_STATE_KEY
+import com.example.note.utils.Constants.PREFERENCES_SORT_STATE_KEY
+import com.example.note.utils.Constants.PREFERENCES_USERNAME
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -26,13 +27,15 @@ class DataStoreOperationImpl @Inject constructor(
     private object PreferencesKey {
         val signedInKey = booleanPreferencesKey(name = PREFERENCES_SIGNED_IN_KEY)
         val firstLogInState = booleanPreferencesKey(name = PREFERENCES_FIRST_TIME_SIGNED_IN_KEY)
-        val authType = booleanPreferencesKey(name = AUTH_TYPE_KEY)
+        val authType = booleanPreferencesKey(name = PREFERENCES_AUTH_TYPE_KEY)
         val jwtTokenKey =
             stringPreferencesKey(name = PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY) // if true google auth else jwt
+        val userNameKey = stringPreferencesKey(name = PREFERENCES_USERNAME)
 
-        val autoSyncKey = booleanPreferencesKey(name = AUTO_SYNC_KEY)
-        val sortStateKey = booleanPreferencesKey(name = SORT_STATE_KEY)
-        val noteViewKey = booleanPreferencesKey(name = NOTE_VIEW_KEY)
+
+        val autoSyncKey = booleanPreferencesKey(name = PREFERENCES_AUTO_SYNC_KEY)
+        val sortStateKey = booleanPreferencesKey(name = PREFERENCES_SORT_STATE_KEY)
+        val noteViewKey = booleanPreferencesKey(name = PREFERENCES_NOTE_VIEW_KEY)
     }
 
     override suspend fun saveUpdateSignedInState(signedInState: Boolean) {
@@ -165,5 +168,19 @@ class DataStoreOperationImpl @Inject constructor(
         }.map {
             val noteView = it[PreferencesKey.noteViewKey] ?: true
             noteView
+        }
+
+    override suspend fun saveUserName(value: String) {
+        dataStore.edit {
+            it[PreferencesKey.userNameKey] = value
+        }
+    }
+
+    override fun readUserName(): Flow<String> = dataStore.data
+        .catch { e ->
+            if (e is IOException) emit(emptyPreferences())
+            else throw e
+        }.map {
+            it[PreferencesKey.userNameKey] ?: "User"
         }
 }

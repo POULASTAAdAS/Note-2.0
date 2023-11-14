@@ -39,8 +39,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.note.presentation.common.DefaultIconButton
 import com.example.note.ui.theme.background
+import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.place_holder
-import com.example.note.ui.theme.url_color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +51,13 @@ fun RecentlyDeletedTopBar(
     deleteAllClicked: () -> Unit
 ) {
     TopAppBar(
-        title = {},
+        title = {
+            Text(
+                text = "Recently Deleted",
+                fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                color = MaterialTheme.colorScheme.inversePrimary,
+            )
+        },
         navigationIcon = {
             DefaultIconButton(
                 icon = Icons.Rounded.ArrowBack,
@@ -170,7 +176,7 @@ fun RecentlyDeletedSingleCard(
                     ) {
                         Text(
                             text = "Recover",
-                            color = url_color
+                            color = google_login_button
                         )
                     }
 
@@ -186,7 +192,7 @@ fun RecentlyDeletedSingleCard(
                         ) {
                             Text(
                                 text = "Delete",
-                                color = url_color
+                                color = google_login_button
                             )
                         }
                     }

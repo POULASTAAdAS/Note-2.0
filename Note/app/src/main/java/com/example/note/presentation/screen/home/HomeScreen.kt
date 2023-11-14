@@ -1,5 +1,6 @@
 package com.example.note.presentation.screen.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -23,7 +24,8 @@ fun HomeScreen(
     homeViewModel: HomeViewModel,
     navigateToDetailsScreen: (Int) -> Unit,
     navigateToNew: () -> Unit,
-    navigateToRecentlyDeleted: () -> Unit
+    navigateToRecentlyDeleted: () -> Unit,
+    navigateToSettingScreen: () -> Unit
 ) {
     val showCircularProgressIndicator by homeViewModel.showCircularProgressIndicator
 
@@ -59,15 +61,17 @@ fun HomeScreen(
 
     val expandState by homeViewModel.expandState
 
+    val userName by homeViewModel.userName
+
     val autoSyncText by homeViewModel.autoSyncText
     val sortStateText by homeViewModel.sortStateText
-    val noteViewText by homeViewModel.noteViewText
 
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
             HomeTopBar(
+                userName = userName,
                 showCircularProgressIndicator = showCircularProgressIndicator,
                 noteEditState = noteEditState,
                 selectedNumber = listOfIdCount,
@@ -103,7 +107,6 @@ fun HomeScreen(
                 expanded = expandState,
                 autoSyncText = autoSyncText,
                 sortStateText = sortStateText,
-                noteViewText = noteViewText,
                 changeExpandState = {
                     homeViewModel.changeExpandState()
                 },
@@ -113,9 +116,7 @@ fun HomeScreen(
                 changeSortState = {
                     homeViewModel.changeSortState()
                 },
-                changeNoteView = {
-                    homeViewModel.changeNoteView()
-                },
+                settingsClicked = navigateToSettingScreen,
                 navigateToRecentlyDeleted = {
                     homeViewModel.changeExpandState()
                     navigateToRecentlyDeleted()
@@ -174,5 +175,10 @@ fun HomeScreen(
                 homeViewModel.searchIconClicked()
             }
         )
+    }
+
+    BackHandler(enabled = searchOpen || searchTriggered) {
+        homeViewModel.clearClicked()
+        homeViewModel.searchTriggered.value = false
     }
 }

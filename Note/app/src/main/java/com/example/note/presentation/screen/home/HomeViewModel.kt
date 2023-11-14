@@ -97,17 +97,28 @@ class HomeViewModel @Inject constructor(
         return network.value == NetworkObserver.STATUS.AVAILABLE
     }
 
+    val userName = mutableStateOf("User")
+
     private val autoSync = mutableStateOf(true)
     private val sortState = mutableStateOf(true)
     private val noteView = mutableStateOf(false)
 
 
     init {
+        readUserName()
         readAutoSyncState()
         readSortState()
         readNoteViewSate()
     }
 
+
+    private fun readUserName() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.readUserName().collect {
+                userName.value = it
+            }
+        }
+    }
 
     private fun readAutoSyncState() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -126,7 +137,7 @@ class HomeViewModel @Inject constructor(
                 sortState.value = it
                 delay(400)
                 if (it) sortStateText.value = "Sort by Last Edited"
-                else sortStateText.value = "Sort by Create Date"
+                else sortStateText.value = "Sort by Last Created"
             }
         }
     }
@@ -135,9 +146,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             dataStoreOperation.readNoteViewState().collect {
                 noteView.value = it
-                delay(400)
-                noteViewText.value = if (it) "Grid view"
-                else "List View"
             }
         }
     }
@@ -505,7 +513,6 @@ class HomeViewModel @Inject constructor(
 
     val autoSyncText = mutableStateOf("Off Auto Sync") // On Auto Sync
     val sortStateText = mutableStateOf("Sort by Last Edited") // Sort by Create Date
-    val noteViewText = mutableStateOf("List View") // Grid view
 
     fun changeExpandState() {
         expandState.value = !expandState.value
@@ -547,7 +554,6 @@ class HomeViewModel @Inject constructor(
         noteView.value = !noteView.value
         viewModelScope.launch(Dispatchers.IO) {
             updateNoteView()
-
         }
     }
 

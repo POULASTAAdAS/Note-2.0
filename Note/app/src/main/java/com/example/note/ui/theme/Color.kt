@@ -2,7 +2,6 @@ package com.example.note.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 
 val PurpleGrey80 = Color(0xFFCCC2DC)
@@ -16,16 +15,15 @@ val light_primary = Color(0xFFECF7FC)
 val inverse_dark_primary = Color(0xFFECF7FC)
 val inverse_light_primary = Color(0xFF000020)
 
-val light_background = Color(0xFFF5FCFF)
-val dark_background = Color(0xFF000041)
+val light_background = Color(0xFFDFF4FD)
+val dark_background = Color(0xFF000058)
 
 val non_Sync = Color(0xFFEEB300)
 
 val light_place_holder = Color.LightGray
 val dark_place_holder = Color.Gray
 
-val dark_url_color = Color(0xFF0096DA)
-val light_url_color = Color.Blue
+//val url_color = Color(0xFF0096DA)
 
 val forgot_text = Color(0xFF0096DA)
 
@@ -45,4 +43,4 @@ val background
     @Composable get() = if (isSystemInDarkTheme()) dark_background else light_background
 
 val url_color
-    @Composable get() = if (isSystemInDarkTheme()) dark_url_color else light_url_color
+    @Composable get() = Color(0xFF0096DA)

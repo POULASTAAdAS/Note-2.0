@@ -1,13 +1,6 @@
 package com.example.note.navigation
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkOut
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -20,6 +13,8 @@ import com.example.note.presentation.screen.neww.NewScreen
 import com.example.note.presentation.screen.recentlyDeleted.RecentlyDeletedScreen
 import com.example.note.presentation.screen.recentlyDeleted.RecentlyDeletedViewModel
 import com.example.note.presentation.screen.selected.SelectedScreen
+import com.example.note.presentation.screen.settings.SettingsScreen
+import com.example.note.presentation.screen.settings.SettingsScreenViewModel
 
 @Composable
 fun SetUpNavGraph(
@@ -48,6 +43,9 @@ fun SetUpNavGraph(
                 },
                 navigateToRecentlyDeleted = {
                     navHostController.navigate(Screens.RecentlyDeleted.path)
+                },
+                navigateToSettingScreen = {
+                    navHostController.navigate(Screens.Settings.path)
                 }
             )
         }
@@ -77,6 +75,22 @@ fun SetUpNavGraph(
                 recentlyDeletedViewModel = recentlyDeletedViewModel,
                 navigateBack = {
                     navHostController.popBackStack()
+                }
+            )
+        }
+
+
+        composable(Screens.Settings.path) {
+            val settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel()
+
+            SettingsScreen(
+                settingsScreenViewModel = settingsScreenViewModel,
+                navigateBack = {
+                    navHostController.popBackStack()
+                },
+                recentlyDeletedNavigationClick = {
+                    navHostController.popBackStack()
+                    navHostController.navigate(Screens.RecentlyDeleted.path)
                 }
             )
         }

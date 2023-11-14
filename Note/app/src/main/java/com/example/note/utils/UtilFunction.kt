@@ -5,6 +5,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.TextUnit
 import com.example.note.domain.model.InternalNote
 import com.example.note.domain.model.Note
 import com.example.note.domain.model.RecentlyDeletedNotes
@@ -45,6 +46,27 @@ fun getAnnotatedString(
         } else append(it)
     }
 }
+
+
+fun modifyUserName(
+    text: String,
+    color: Color,
+    fontSize: TextUnit
+): AnnotatedString = buildAnnotatedString {
+    append("Hi ")
+    val first = text.first()
+    withStyle(
+        style = SpanStyle(
+            color = color,
+            fontSize = fontSize
+        )
+    ) {
+        append(first)
+    }
+    append(text.drop(1))
+    append("...")
+}
+
 
 fun convertListOfInternalNoteToNote(listOfInternalNote: List<InternalNote>): List<Note> {
     val listOfNote = ArrayList<Note>()

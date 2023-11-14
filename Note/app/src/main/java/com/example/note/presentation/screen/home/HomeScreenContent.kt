@@ -29,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
+import com.example.note.R
 import com.example.note.domain.model.Note
 import com.example.note.presentation.common.CustomToastInternet
 import com.example.note.presentation.common.SingleCardForGridView
 import com.example.note.presentation.common.SingleCardForResearchResult
+import com.example.note.presentation.screen.empty.EmptyScreen
 
 @Composable
 fun HomeScreenContent(
@@ -115,9 +117,8 @@ fun HomeScreenContent(
                     columnClicked = columnClicked
                 )
         else
-            if (searchTriggered) { // todo show nothing found
-            } else { // todo show empty screen
-            }
+            if (searchTriggered) EmptyScreen(lottie = R.raw.no_search_result)
+            else EmptyScreen(lottie = R.raw.empty_home_screen)
     }
 }
 

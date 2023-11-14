@@ -23,4 +23,7 @@ interface DataStoreOperation {
 
     suspend fun saveNoteViewState(value: Boolean)
     fun readNoteViewState(): Flow<Boolean>
+
+    suspend fun saveUserName(value: String)
+    fun readUserName(): Flow<String>
 }
