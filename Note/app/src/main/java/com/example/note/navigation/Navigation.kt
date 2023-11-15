@@ -10,6 +10,7 @@ import com.example.note.presentation.screen.home.HomeViewModel
 import com.example.note.presentation.screen.login.LoginScreen
 import com.example.note.presentation.screen.login.LoginViewModel
 import com.example.note.presentation.screen.neww.NewScreen
+import com.example.note.presentation.screen.onBoard.WelcomeScreen
 import com.example.note.presentation.screen.recentlyDeleted.RecentlyDeletedScreen
 import com.example.note.presentation.screen.recentlyDeleted.RecentlyDeletedViewModel
 import com.example.note.presentation.screen.selected.SelectedScreen
@@ -26,6 +27,13 @@ fun SetUpNavGraph(
         navController = navHostController,
         startDestination = startDestination
     ) {
+        composable(Screens.OnBoard.path) {
+            WelcomeScreen {
+                navHostController.popBackStack()
+                navHostController.navigate(Screens.Login.path)
+            }
+        }
+
         composable(route = Screens.Login.path) {
             val loginViewModel: LoginViewModel = hiltViewModel()
             LoginScreen(loginViewModel = loginViewModel)
@@ -78,7 +86,6 @@ fun SetUpNavGraph(
                 }
             )
         }
-
 
         composable(Screens.Settings.path) {
             val settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel()

@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import com.example.note.domain.model.RecentlyDeletedNotes
 
 
-@Database(entities = [RecentlyDeletedNotes::class], version = 4, exportSchema = false)
+@Database(entities = [RecentlyDeletedNotes::class], version = 1, exportSchema = false)
 abstract class RecentlyDeletedDatabase : RoomDatabase() {
     abstract fun recentlyDeletedDao(): RecentlyDeletedDao
 }

@@ -78,7 +78,7 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             dataStoreOperation.readSignedInState().collect {
-                _startDestination.value = if (it) Screens.Home.path else Screens.Login.path
+                _startDestination.value = if (it) Screens.Home.path else Screens.OnBoard.path
                 getAllData()
             }
         }
@@ -265,28 +265,36 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    private suspend fun updateFirstTimeLoginSate() {
-        dataStoreOperation.saveFirstTimeLoginState(false)
-    }
-
-    private suspend fun readTokenOrCookie() {
-        dataStoreOperation.readJWTTokenOrSession().collect {
-            tokenOrCookie.value = it
-            readFirstTimeLoginState()
+    private fun updateFirstTimeLoginSate() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveFirstTimeLoginState(false)
         }
     }
 
-    private suspend fun readFirstTimeLoginState() {
-        dataStoreOperation.readFirstTimeLoginState().collect {
-            firstTimeLogIn = it
-            readLogInType()
+    private fun readTokenOrCookie() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.readJWTTokenOrSession().collect {
+                tokenOrCookie.value = it
+                readFirstTimeLoginState()
+            }
         }
     }
 
-    private suspend fun readLogInType() {
-        dataStoreOperation.readAuthType().collect {
-            logInType = it
-            setCookie()
+    private fun readFirstTimeLoginState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.readFirstTimeLoginState().collect {
+                firstTimeLogIn = it
+                readLogInType()
+            }
+        }
+    }
+
+    private fun readLogInType() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.readAuthType().collect {
+                logInType = it
+                setCookie()
+            }
         }
     }
 

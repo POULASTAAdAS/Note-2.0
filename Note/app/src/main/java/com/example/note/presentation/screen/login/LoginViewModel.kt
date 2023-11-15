@@ -28,6 +28,7 @@ import com.example.note.domain.model.LoginResponse
 import com.example.note.domain.model.UserExists
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
+import com.example.note.utils.firstLetterCapOfUserName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,9 +79,17 @@ class LoginViewModel @Inject constructor(
     private val loginResponse: MutableState<DataOrException<LoginResponse, Boolean, Exception>> =
         mutableStateOf(DataOrException())
 
+    private fun saveUserName(name: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveUserName(name)
+        }
+    }
 
-    private suspend fun saveJWTTokenOrCookie(jwtToken: String) {
-        dataStoreOperation.saveUpdateJWTTokenOrSession(jwtToken = jwtToken)
+
+    private fun saveJWTTokenOrCookie(jwtToken: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveUpdateJWTTokenOrSession(jwtToken = jwtToken)
+        }
     }
 
     fun changeGoogleButtonLoadingState(value: Boolean) {
@@ -192,8 +201,9 @@ class LoginViewModel @Inject constructor(
 
             if (loginResponse.value.data?.token != null) {
                 val token = loginResponse.value.data!!.token!!
-
+                val userName = loginResponse.value.data!!.userName!!
                 saveJWTTokenOrCookie(token)
+                saveUserName(firstLetterCapOfUserName(userName))
             }
         }
     }
@@ -250,7 +260,11 @@ class LoginViewModel @Inject constructor(
                         loginResponse.value.data!!.userExists!! == UserExists.YES_SAME_PASSWORD.name ||
                         loginResponse.value.data!!.userExists!! == UserExists.NO.name
                     ) {
+                        val name = loginResponse.value.data!!.userName!!
+
+
                         saveJWTTokenOrCookie(jwtToken)
+                        saveUserName(name = firstLetterCapOfUserName(name))
                         startBasicLoginProcess(
                             activity = activity,
                             credential = credential
@@ -279,10 +293,12 @@ class LoginViewModel @Inject constructor(
     }
 
 
-    private suspend fun saveCookie() {
+    private fun saveCookieAndUserName() {
         try {
             val cookie = cookieManager.cookieStore.cookies[0].toString()
+            val name = loginResponse.value.data!!.userName!!
             saveJWTTokenOrCookie(cookie)
+            saveUserName(firstLetterCapOfUserName(name))
         } catch (e: Exception) {
             Log.d("error saving session data", e.message.toString())
         }
@@ -309,7 +325,7 @@ class LoginViewModel @Inject constructor(
                 dataStoreOperation.saveAuthenticationType(true)
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
-                saveCookie()
+                saveCookieAndUserName()
             } else {
                 unableToLogin.value = true
             }

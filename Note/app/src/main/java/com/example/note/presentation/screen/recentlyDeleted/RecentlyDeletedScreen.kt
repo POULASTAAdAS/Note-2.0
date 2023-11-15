@@ -95,13 +95,11 @@ fun RecentlyDeletedContent(
                         content = it.content ?: "",
                         createDate = it.createDate,
                         recoverClicked = recoverClicked,
-                        deleteOne = deleteOne
+                        deleteOne = deleteOne,
+//                        deleteDays = it.deleteDate
                     )
                 }
             }
-        else EmptyScreen(
-            lottie = R.raw.empty_recently_deleted_screen,
-            modifier = Modifier.padding(start = 90.dp, top = 90.dp, end = 90.dp, bottom = 50.dp)
-        )
+        else EmptyScreen(lottie = R.raw.empty_recently_deleted_screen)
     }
 }

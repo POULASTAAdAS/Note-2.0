@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import com.example.note.presentation.common.DefaultIconButton
 import com.example.note.ui.theme.background
 import com.example.note.ui.theme.google_login_button
-import com.example.note.ui.theme.place_holder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +98,7 @@ fun RecentlyDeletedSingleCard(
     heading: String,
     content: String,
     createDate: String,
+//    deleteDays: Int,
     recoverClicked: (Int) -> Unit,
     deleteOne: (Int) -> Unit
 ) {
@@ -128,17 +128,31 @@ fun RecentlyDeletedSingleCard(
             modifier = Modifier.padding(10.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.Start
             ) {
-                Text(
-                    text = "Created on: $createDate",
-                    maxLines = 1,
-                    softWrap = false,
-                    color = place_holder,
-                    fontWeight = FontWeight.Light,
-                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                )
+
+//                Text(
+//                    text = "$deleteDays days left",
+//                    maxLines = 1,
+//                    softWrap = false,
+//                    color = MaterialTheme.colorScheme.inversePrimary.copy(.7f),
+//                    fontWeight = FontWeight.Light,
+//                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+//                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "created on: $createDate",
+                        maxLines = 1,
+                        softWrap = false,
+                        color = MaterialTheme.colorScheme.inversePrimary.copy(.7f),
+                        fontWeight = FontWeight.Light,
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                    )
+                }
             }
 
             Row(
@@ -215,7 +229,9 @@ private fun Preview() {
             heading = "heading",
             content = "this is content",
             createDate = "2023-10-10",
-            recoverClicked = {}) {
+            recoverClicked = {} ,
+//            deleteDays = 10
+        ) {
 
         }
     }

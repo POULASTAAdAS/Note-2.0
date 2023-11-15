@@ -19,6 +19,14 @@ fun getCurrentDate(): String =
         Locale.getDefault()
     ).format(Date())
 
+
+fun getDeleteDate(): String =
+    SimpleDateFormat(
+    "yyyy-MM-dd",
+    Locale.getDefault()
+).format(Date())
+
+
 fun getCurrentTime(): String = SimpleDateFormat(
     "hh:mm a",
     Locale.getDefault()
@@ -64,7 +72,15 @@ fun modifyUserName(
         append(first)
     }
     append(text.drop(1))
-    append("...")
+}
+
+
+fun firstLetterCapOfUserName(name: String): String {
+    var userName = name.first().uppercase()
+
+    userName += name.drop(1)
+
+    return userName
 }
 
 

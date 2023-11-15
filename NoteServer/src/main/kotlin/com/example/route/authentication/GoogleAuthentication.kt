@@ -47,7 +47,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                             call.respond(
                                 message = LoginResponse(
                                     userExists = UserExists.YES_SAME_PASSWORD.name,
-                                    googleLogIn = true
+                                    googleLogIn = true,
+                                    userName = name
                                 ),
                                 status = HttpStatusCode.OK
                             )
@@ -72,7 +73,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                     call.respond(
                         message = LoginResponse(
                             userExists = UserExists.NO.name,
-                            googleLogIn = true
+                            googleLogIn = true,
+                            userName = name
                         ),
                         status = HttpStatusCode.OK
                     )

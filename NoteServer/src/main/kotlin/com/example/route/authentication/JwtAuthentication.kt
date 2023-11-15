@@ -59,7 +59,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.jwtAuthentication(
                         call.respond(
                             message = LoginResponse(
                                 userExists = UserExists.YES_SAME_PASSWORD.name,
-                                token = token
+                                token = token,
+                                userName = loginRequest.email!!.removeSuffix("@gmail.com")
                             ),
                             status = HttpStatusCode.OK
                         )
@@ -82,7 +83,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.jwtAuthentication(
                     call.respond(
                         message = LoginResponse(
                             userExists = UserExists.NO.name,
-                            token = token
+                            token = token,
+                            userName = loginRequest.email!!.removeSuffix("@gmail.com")
                         ),
                         status = HttpStatusCode.OK
                     )

@@ -111,4 +111,6 @@ dependencies {
 
     // lotti
     implementation ("com.airbnb.android:lottie-compose:6.0.1")
+
+    implementation("androidx.paging:paging-compose:3.3.0-alpha02")
 }

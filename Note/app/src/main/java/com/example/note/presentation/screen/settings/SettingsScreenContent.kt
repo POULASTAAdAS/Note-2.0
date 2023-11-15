@@ -51,8 +51,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.note.R
 import com.example.note.presentation.common.LoginTextField
-import com.example.note.ui.theme.DarkColorScheme
-import com.example.note.ui.theme.LightColorScheme
 import com.example.note.ui.theme.background
 import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.place_holder
@@ -472,68 +470,6 @@ fun SettingsSortTypeDropDown(
 }
 
 
-@Composable
-fun ThemChangeCard(
-    themType: Boolean = true,
-    themTypeText: String = "Dark",
-    changeThem: (Boolean) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = background,
-            contentColor = MaterialTheme.colorScheme.inversePrimary
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp
-        ),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Change Them",
-                fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                color = MaterialTheme.colorScheme.inversePrimary,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = themTypeText,
-                    fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                    fontWeight = FontWeight.Light,
-                    color = MaterialTheme.colorScheme.inversePrimary.copy(.6f)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Switch(
-                        checked = themType,
-                        onCheckedChange = changeThem,
-                        colors = SwitchDefaults.colors(
-                            checkedBorderColor = MaterialTheme.colorScheme.inversePrimary,
-                            uncheckedBorderColor = MaterialTheme.colorScheme.inversePrimary,
-                            checkedThumbColor = google_login_button,
-                            checkedIconColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            uncheckedTrackColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
-
 
 @Composable
 fun RecentlyDeletedCard(
@@ -568,14 +504,6 @@ fun RecentlyDeletedCard(
             )
         }
     }
-}
-
-@Preview
-@Composable
-private fun ThemCard() {
-    ThemChangeCard(
-        changeThem = {}
-    )
 }
 
 

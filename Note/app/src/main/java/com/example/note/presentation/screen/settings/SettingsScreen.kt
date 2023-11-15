@@ -68,8 +68,10 @@ fun SettingsScreen(
             saveClicked = {
                 if (userName == oldUserName)
                     Toast.makeText(context, "same username", Toast.LENGTH_SHORT).show()
-                else
+                else {
                     settingsScreenViewModel.saveUserName()
+                    Toast.makeText(context, "username updated", Toast.LENGTH_SHORT).show()
+                }
             },
             userNameUpdateCancelClicked = {
                 settingsScreenViewModel.userNameUpdateCancelClicked()
