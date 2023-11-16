@@ -17,6 +17,10 @@ interface NetworkRepository {
     suspend fun updateOne(token: String , request: ApiRequest):  DataOrException<ApiResponse, Boolean, Exception>
     suspend fun updateMultiple(token: String , request: ApiRequest):  DataOrException<ApiResponse, Boolean, Exception>
 
+    suspend fun updateUserName(token: String , request: ApiRequest): DataOrException<ApiResponse, Boolean, Exception>
+
     suspend fun deleteOne(token: String , request: ApiRequest):  DataOrException<ApiResponse, Boolean, Exception>
     suspend fun deleteMultiple(token: String , request: ApiRequest):  DataOrException<ApiResponse, Boolean, Exception>
+
+    suspend fun deleteUser(token: String):  DataOrException<ApiResponse, Boolean, Exception>
 }

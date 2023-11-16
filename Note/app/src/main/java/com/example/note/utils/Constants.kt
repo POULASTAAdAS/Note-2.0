@@ -14,7 +14,6 @@ object Constants {
 
     const val PREFERENCES_AUTO_SYNC_KEY = "autoSync"
     const val PREFERENCES_SORT_STATE_KEY = "sortState"
-    const val PREFERENCES_NOTE_VIEW_KEY = "noteView"
 
     const val PREFERENCES_USERNAME = "userNameKey"
 

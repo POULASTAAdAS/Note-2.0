@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -56,9 +54,9 @@ fun CustomToastInternet(
 }
 
 @Composable
-fun CustomAutoSyncOff(
+fun CustomToast(
+    text: String,
     color: Color = url_color,
-    turnOnAutoSync: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -72,21 +70,12 @@ fun CustomAutoSyncOff(
             Text(
                 modifier = Modifier
                     .padding(10.dp),
-                text = "Turn on auto sync to save your notes\n to the server",
+                text = text,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = MaterialTheme.typography.labelLarge.fontSize,
                 color = color
             )
-
-            Button(
-                onClick = turnOnAutoSync, colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = url_color
-                )
-            ) {
-                Text(text = "Turn on")
-            }
         }
     }
 }

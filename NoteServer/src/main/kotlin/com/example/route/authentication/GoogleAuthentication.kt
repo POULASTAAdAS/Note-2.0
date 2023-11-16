@@ -37,7 +37,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                 dataBaseOperation.createGoogleAuthenticatedUser(
                     user = User(
                         sub = sub,
-                        name = name
+                        name = name,
+                        userName = name
                     )
                 )
             ) {
@@ -48,7 +49,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                                 message = LoginResponse(
                                     userExists = UserExists.YES_SAME_PASSWORD.name,
                                     googleLogIn = true,
-                                    userName = name
+                                    userName = dataBaseOperation.getUserNameForGoogleUser(sub)
                                 ),
                                 status = HttpStatusCode.OK
                             )
@@ -74,7 +75,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.googleAuthentication(
                         message = LoginResponse(
                             userExists = UserExists.NO.name,
                             googleLogIn = true,
-                            userName = name
+                            userName = dataBaseOperation.getUserNameForGoogleUser(sub)
                         ),
                         status = HttpStatusCode.OK
                     )

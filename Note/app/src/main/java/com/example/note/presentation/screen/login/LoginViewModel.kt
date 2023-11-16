@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.credentials.CreatePasswordRequest
@@ -68,6 +69,9 @@ class LoginViewModel @Inject constructor(
     val emailNotValid = mutableStateOf(false)
     val passwordToShort = mutableStateOf(false)
 
+    val userExists = mutableStateOf(false)
+    val userExistsCount = mutableIntStateOf(0)
+
     val emailFieldEmpty = mutableStateOf(false)
     val passwordFieldEmpty = mutableStateOf(false)
 
@@ -108,11 +112,13 @@ class LoginViewModel @Inject constructor(
         passwordFiled.value = value
     }
 
-
     fun changeUnableToLogin(value: Boolean) {
         unableToLogin.value = value
     }
 
+    fun checkUserExistsStatus(){
+        if (userExists.value) userExists.value = false
+    }
 
     fun emailValidationCheck() {
         emailNotValid.value = !emailFiled.value.endsWith("@gmail.com")
@@ -148,6 +154,7 @@ class LoginViewModel @Inject constructor(
                 credentialManager.createCredential(
                     context = activity, request = CreatePasswordRequest(email, password)
                 )
+
                 dataStoreOperation.saveUpdateSignedInState(true)
                 dataStoreOperation.saveFirstTimeLoginState(true)
                 dataStoreOperation.saveAuthenticationType(false)
@@ -262,18 +269,17 @@ class LoginViewModel @Inject constructor(
                     ) {
                         val name = loginResponse.value.data!!.userName!!
 
-
                         saveJWTTokenOrCookie(jwtToken)
                         saveUserName(name = firstLetterCapOfUserName(name))
                         startBasicLoginProcess(
                             activity = activity,
                             credential = credential
                         )
-                    } else {
-                        // TODO UserExists.YES_DIFF_PASSWORD
                     }
-                } else {
-                    unableToLogin.value = true
+                } else if (loginResponse.value.data!!.userExists!! == UserExists.YES_DIFF_PASSWORD.name) {
+                    Log.d("called", "called ${userExistsCount.intValue}")
+                    userExists.value = true
+                    userExistsCount.intValue = ++userExistsCount.intValue
                     emptyTextAndPasswordField()
                 }
                 changeBasicLoginLoadingState(false)

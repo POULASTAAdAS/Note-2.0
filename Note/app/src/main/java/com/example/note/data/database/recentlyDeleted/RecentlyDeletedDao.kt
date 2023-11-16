@@ -12,11 +12,11 @@ interface RecentlyDeletedDao {
     @Query("select * from recentlyDeletedTable order by deleteDate desc")
     fun getAllByDeleteDate(): Flow<List<RecentlyDeletedNotes>>
 
+    @Query("update recentlyDeletedTable set leftDays = :leftDays where id=:id")
+    suspend fun updateLeftDays(id: Int, leftDays: Int)
+
     @Query("select * from recentlyDeletedTable where id=:id")
     fun recoverOne(id: Int): Flow<RecentlyDeletedNotes>
-
-    @Query("select * from recentlyDeletedTable where id in (:listOfId)")
-    fun recoverMultiple(listOfId: ArrayList<Int>): Flow<List<RecentlyDeletedNotes>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addOne(recentlyDeletedNotes: RecentlyDeletedNotes)

@@ -50,7 +50,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.jwtAuthentication(
                 noteDataBaseOperation.createJWTAuthenticatedUser(
                     user = User(
                         email = loginRequest.email,
-                        password = loginRequest.password
+                        password = loginRequest.password,
+                        userName = loginRequest.email!!.removeSuffix("@gmail.com")
                     )
                 )
             ) {
@@ -60,7 +61,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.jwtAuthentication(
                             message = LoginResponse(
                                 userExists = UserExists.YES_SAME_PASSWORD.name,
                                 token = token,
-                                userName = loginRequest.email!!.removeSuffix("@gmail.com")
+                                userName = noteDataBaseOperation.getUserNameForJwtUser(loginRequest.email)
                             ),
                             status = HttpStatusCode.OK
                         )
@@ -84,7 +85,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.jwtAuthentication(
                         message = LoginResponse(
                             userExists = UserExists.NO.name,
                             token = token,
-                            userName = loginRequest.email!!.removeSuffix("@gmail.com")
+                            userName = noteDataBaseOperation.getUserNameForJwtUser(loginRequest.email)
                         ),
                         status = HttpStatusCode.OK
                     )

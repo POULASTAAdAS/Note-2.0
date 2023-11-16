@@ -5,11 +5,8 @@ import com.example.model.User
 import com.example.utils.UserExists
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
-import org.litote.kmongo.and
+import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineDatabase
-import org.litote.kmongo.elemMatch
-import org.litote.kmongo.eq
-import org.litote.kmongo.pullByFilter
 
 class NoteDataBaseOperationImpl(
     database: CoroutineDatabase
@@ -40,6 +37,18 @@ class NoteDataBaseOperationImpl(
         }
     }
 
+
+    override suspend fun getUserNameForJwtUser(email: String): String {
+        return userCollection.find(
+            User::email eq email
+        ).first()?.userName.toString()
+    }
+
+    override suspend fun getUserNameForGoogleUser(sub: String): String {
+        return userCollection.find(
+            User::sub eq sub
+        ).first()?.userName.toString()
+    }
 
     override suspend fun getAllNoteForJWTAuthenticatedUser(email: String): List<Note> {
         val list: ArrayList<Note> = ArrayList()
@@ -150,6 +159,19 @@ class NoteDataBaseOperationImpl(
         }
     }
 
+    override suspend fun updateUserNameOfJwtUser(name: String, email: String) {
+        userCollection.updateOne(
+            User::email eq email,
+            setValue(User::userName , name)
+        )
+    }
+
+    override suspend fun updateUserNameOfGoogleUser(name: String, sub: String) {
+        userCollection.updateOne(
+            User::sub eq sub,
+            setValue(User::userName , name)
+        )
+    }
 
     override suspend fun deleteOneForJWTUser(_id: String, email: String) {
         val find = and(

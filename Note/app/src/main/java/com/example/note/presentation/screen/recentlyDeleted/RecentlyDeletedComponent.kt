@@ -97,8 +97,8 @@ fun RecentlyDeletedSingleCard(
     noteId: Int,
     heading: String,
     content: String,
-    createDate: String,
-//    deleteDays: Int,
+    deleteDate: String,
+    leftDays: Int,
     recoverClicked: (Int) -> Unit,
     deleteOne: (Int) -> Unit
 ) {
@@ -128,26 +128,24 @@ fun RecentlyDeletedSingleCard(
             modifier = Modifier.padding(10.dp)
         ) {
             Row(
+                modifier = Modifier.padding(bottom = 5.dp),
                 horizontalArrangement = Arrangement.Start
             ) {
 
-//                Text(
-//                    text = "$deleteDays days left",
-//                    maxLines = 1,
-//                    softWrap = false,
-//                    color = MaterialTheme.colorScheme.inversePrimary.copy(.7f),
-//                    fontWeight = FontWeight.Light,
-//                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
-//                )
+                Text(
+                    text = if (leftDays == 1) "$leftDays day" else "$leftDays days",
+                    softWrap = false,
+                    color = MaterialTheme.colorScheme.inversePrimary.copy(.7f),
+                    fontWeight = FontWeight.Light,
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = "created on: $createDate",
-                        maxLines = 1,
-                        softWrap = false,
+                        text = "deleted on: $deleteDate",
                         color = MaterialTheme.colorScheme.inversePrimary.copy(.7f),
                         fontWeight = FontWeight.Light,
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize
@@ -228,9 +226,9 @@ private fun Preview() {
             noteId = 1,
             heading = "heading",
             content = "this is content",
-            createDate = "2023-10-10",
-            recoverClicked = {} ,
-//            deleteDays = 10
+            deleteDate = "2023-10-10",
+            leftDays = 1,
+            recoverClicked = {},
         ) {
 
         }

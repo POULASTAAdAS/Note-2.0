@@ -105,12 +105,12 @@ class RecentlyDeletedViewModel @Inject constructor(
                             content = note.content,
                             createDate = note.createDate,
                             updateDate = note.updateDate,
+                            updateTime = note.updateTime,
                             edited = note.edited,
                             pinned = note.pinned,
                             syncState = note.syncState
                         )
                     )
-
                     deleteOne(id)
                 }
         }
@@ -141,6 +141,7 @@ class RecentlyDeletedViewModel @Inject constructor(
                                 content = note.content,
                                 createDate = note.createDate!!,
                                 updateDate = note.updateDate!!,
+                                updateTime = note.updateTime!!,
                                 edited = note.edited,
                                 pinned = note.pinned,
                                 syncState = false,
@@ -155,6 +156,7 @@ class RecentlyDeletedViewModel @Inject constructor(
                     content = note.content,
                     createDate = note.createDate!!,
                     updateDate = note.updateDate!!,
+                    updateTime = note.updateTime!!,
                     edited = note.edited,
                     pinned = note.pinned,
                     syncState = false,

@@ -12,8 +12,10 @@ data class RecentlyDeletedNotes(
     val content: String? = null,
     val createDate: String,
     val updateDate: String,
+    val updateTime: String,
     val edited: Int = 0,
     val pinned: Boolean,
     val syncState: Boolean,
-    val deleteDate: String
+    val deleteDate: String,
+    val leftDays: Int
 )

@@ -1,10 +1,16 @@
 package com.example.note.presentation.screen.settings
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.note.connectivity.NetworkObserver
 import com.example.note.connectivity.NetworkObserverImpl
+import com.example.note.data.repository.InternalDatabaseImpl
+import com.example.note.data.repository.NoteRepositoryImpl
+import com.example.note.data.repository.RecentlyDeletedRepositoryImpl
+import com.example.note.domain.model.ApiRequest
 import com.example.note.domain.repository.DataStoreOperation
 import com.example.note.domain.repository.NetworkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,18 +19,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-/*
-todo add username to dataStore operation
- change apiResponse add username get username from email
- add time to note
- change selected screen show last edited date and time
-*/
-
 @HiltViewModel
 class SettingsScreenViewModel @Inject constructor(
     private val connectivity: NetworkObserverImpl,
     private val server: NetworkRepository,
     private val dataStoreOperation: DataStoreOperation,
+    private val dbNote: NoteRepositoryImpl,
+    private val dbInternal: InternalDatabaseImpl,
+    private val dbRecentlyDeleted: RecentlyDeletedRepositoryImpl
 ) : ViewModel() {
     var network = mutableStateOf(NetworkObserver.STATUS.UNAVAILABLE)
         private set
@@ -103,12 +105,32 @@ class SettingsScreenViewModel @Inject constructor(
     var userNameCardState = mutableStateOf(false)
         private set
 
+    var logOutCardState = mutableStateOf(false)
+        private set
+
+    var deleteAccountCardState = mutableStateOf(false)
+        private set
+
     fun changeUserNameText(value: String) {
         userName.value = value
     }
 
     fun changeUserNameCardState() {
+        logOutCardState.value = false
+        deleteAccountCardState.value = false
         userNameCardState.value = !userNameCardState.value
+    }
+
+    fun changeLogoutCardState() {
+        userNameCardState.value = false
+        deleteAccountCardState.value = false
+        logOutCardState.value = !logOutCardState.value
+    }
+
+    fun changeDeleteAccountCardState() {
+        logOutCardState.value = false
+        userNameCardState.value = false
+        deleteAccountCardState.value = !deleteAccountCardState.value
     }
 
     fun saveUserName() {
@@ -123,7 +145,14 @@ class SettingsScreenViewModel @Inject constructor(
     }
 
     private fun updateToServer() {
-        // TODO server modification and app modification //// logInResponse apiRequest
+        viewModelScope.launch(Dispatchers.IO) {
+            server.updateUserName(
+                token = "Bearer ${tokenOrCookie.value}",
+                request = ApiRequest(
+                    userName = userName.value.trim()
+                )
+            )
+        }
     }
 
     fun userNameUpdateCancelClicked() {
@@ -140,6 +169,87 @@ class SettingsScreenViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.IO) {
                 dataStoreOperation.saveSortState(value)
             }
+    }
+
+    val isLoggedOut = mutableStateOf(false)
+    val isAccountDeleted = mutableStateOf(false)
+
+    val navigateToLogInScreen = mutableStateOf(false)
+
+    fun logOutUser() {
+        viewModelScope.launch(Dispatchers.IO) {
+            isLoggedOut.value = true
+            changeLogoutCardState()
+
+            dbNote.deleteAll()
+                .also {
+                    reset()
+                }
+            dbInternal.deleteAll()
+            dbRecentlyDeleted.deleteAll()
+        }
+    }
+
+    fun deleteUser(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            isAccountDeleted.value = true
+            changeDeleteAccountCardState()
+            server.deleteUser(
+                token = "Bearer ${tokenOrCookie.value}"
+            ).also {
+                if (it.data != null && it.data!!.status) {
+                    reset()
+                } else {
+                    isAccountDeleted.value = false
+                    Toast.makeText(
+                        context,
+                        "unable to delete account please try after some time",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+
+    private fun reset() {
+        resetCookieOrToken()
+        resetSortType()
+        resetUserName()
+        resetFirstTimeLoginState()
+        resetSignedInState()
+    }
+
+    private fun resetCookieOrToken() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveUpdateJWTTokenOrSession("")
+        }
+    }
+
+    private fun resetUserName() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveUserName("User")
+        }
+    }
+
+    private fun resetSortType() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveSortState(true)
+        }
+    }
+
+
+    private fun resetSignedInState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveUpdateSignedInState(false)
+            navigateToLogInScreen.value = true
+        }
+    }
+
+    private fun resetFirstTimeLoginState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreOperation.saveFirstTimeLoginState(false)
+        }
     }
 }
 

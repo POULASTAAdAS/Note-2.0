@@ -60,6 +60,15 @@ interface NoteApi {
 
     //---------------------------------
 
+    @PATCH("/update_username")
+    suspend fun updateUserName(
+        @Header("Authorization")
+        token: String,
+        @Body request: ApiRequest
+    ): ApiResponse
+
+    //---------------------------------
+
     @HTTP(method = "DELETE", path = "/delete_one", hasBody = true)
     suspend fun deleteOne(
         @Header("Authorization")
@@ -72,5 +81,13 @@ interface NoteApi {
         @Header("Authorization")
         token: String,
         @Body request: ApiRequest
+    ): ApiResponse
+
+    //---------------------------------
+
+    @DELETE("/delete_user")
+    suspend fun deleteUser(
+        @Header("Authorization")
+        token: String,
     ): ApiResponse
 }

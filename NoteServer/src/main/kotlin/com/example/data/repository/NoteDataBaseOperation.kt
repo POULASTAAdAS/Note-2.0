@@ -9,6 +9,9 @@ interface NoteDataBaseOperation {
     suspend fun createGoogleAuthenticatedUser(user: User): UserExists
     suspend fun createJWTAuthenticatedUser(user: User): UserExists
 
+    suspend fun getUserNameForJwtUser(email: String): String
+    suspend fun getUserNameForGoogleUser(sub: String): String
+
     suspend fun getAllNoteForJWTAuthenticatedUser(email: String): List<Note>
     suspend fun getAllNoteForGoogleAuthenticatedUser(sub: String): List<Note>
 
@@ -23,6 +26,9 @@ interface NoteDataBaseOperation {
 
     suspend fun updateMultipleForJWTUser(listOfNote: List<Note>, email: String)
     suspend fun updateMultipleForGoogleUser(listOfNote: List<Note>, sub: String)
+
+    suspend fun updateUserNameOfJwtUser(name: String, email: String)
+    suspend fun updateUserNameOfGoogleUser(name: String, sub: String)
 
     suspend fun deleteOneForJWTUser(_id: String, email: String)
     suspend fun deleteOneForGoogleUser(_id: String, sub: String)

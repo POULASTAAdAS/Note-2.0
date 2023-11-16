@@ -1,6 +1,5 @@
 package com.example.note.presentation.screen.login
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,7 +38,6 @@ import com.example.note.presentation.common.ErrorTextFieldIndication
 import com.example.note.presentation.common.ForgotText
 import com.example.note.presentation.common.GoogleLoginButton
 import com.example.note.presentation.common.LoginTextField
-import com.example.note.ui.theme.primary
 
 @Composable
 fun LoginScreenContent(
@@ -47,6 +45,8 @@ fun LoginScreenContent(
     emailNotValid: Boolean,
     passwordToShort: Boolean,
     emailFieldEmpty: Boolean,
+    userExists: Boolean,
+    userExistsCount: Int,
     passwordFieldEmpty: Boolean,
     basicLoginLoadingState: Boolean,
     passwordFiled: String,
@@ -62,7 +62,7 @@ fun LoginScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                color = primary
+                color = MaterialTheme.colorScheme.primary
             )
             .padding(
                 top = 35.dp,
@@ -80,7 +80,7 @@ fun LoginScreenContent(
         Spacer(modifier = Modifier.aspectRatio(2.5f))
 
         Text(
-            text = "Login",
+            text = "Login/SingUp",
             modifier = Modifier.padding(start = 8.dp),
             style = TextStyle(
                 fontSize = MaterialTheme.typography.headlineLarge.fontSize,
@@ -107,6 +107,7 @@ fun LoginScreenContent(
 
         if (emailNotValid) ErrorTextFieldIndication(text = "Email is not valid")
         else if (emailFieldEmpty) ErrorTextFieldIndication(text = "Email can't be empty")
+        else if (userExists) ErrorTextFieldIndication(text = "Email already registered")
         else ErrorTextFieldIndication(text = "")
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -141,7 +142,10 @@ fun LoginScreenContent(
         else ErrorTextFieldIndication(text = "")
 
 
-        ForgotText(text = "Forgot Password ?") {
+        ForgotText(
+            text = "Forgot Password ?",
+            userExistsCount = userExistsCount
+        ) {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         }
 
@@ -183,28 +187,8 @@ private fun PreviewLight() {
         emailNotValid = false,
         passwordToShort = false,
         emailFieldEmpty = false,
-        passwordFieldEmpty = false,
-        basicLoginLoadingState = false,
-        passwordFiled = "",
-        changeEmailFiled = {},
-        changePasswordFiled = {},
-        loadingState = false,
-        basicLoginClicked = { },
-        emailFieldEmptyCheck = { },
-        passwordFieldEmptyValidityCheck = { }
-    ) {
-
-    }
-}
-
-@Preview(uiMode = UI_MODE_NIGHT_YES)
-@Composable
-private fun PreviewDark() {
-    LoginScreenContent(
-        emailFiled = "",
-        emailNotValid = false,
-        passwordToShort = false,
-        emailFieldEmpty = false,
+        userExists = true,
+        userExistsCount = 5,
         passwordFieldEmpty = false,
         basicLoginLoadingState = false,
         passwordFiled = "",

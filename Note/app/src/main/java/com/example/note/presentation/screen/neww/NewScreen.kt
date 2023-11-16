@@ -16,6 +16,7 @@ import com.example.note.presentation.screen.data.DataContent
 import com.example.note.presentation.screen.data.NoteScreenTopBar
 import com.example.note.presentation.screen.home.HomeViewModel
 import com.example.note.utils.getCurrentDate
+import com.example.note.utils.getCurrentTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,24 +32,28 @@ fun NewScreen(
 
     val context = LocalContext.current
 
+    val createTime = remember {
+        mutableStateOf("")
+    }
     val localDate = remember {
         mutableStateOf("")
     }
-
     LaunchedEffect(key1 = Unit) {
-        localDate.value = getCurrentDate()
+        localDate.value = getCurrentDate().toString()
+        createTime.value = getCurrentTime()
     }
 
     Scaffold(
         topBar = {
             NoteScreenTopBar(
-                createTime = localDate.value,
-                saveClicked = {
+                createDate = localDate.value,
+                createTime = createTime.value,
+                saveClicked = { date, time ->
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     focusManager.clearFocus()
 
                     if (content.trim().isNotEmpty() || heading.trim().isNotEmpty())
-                        homeViewModel.addAndPushToServer(it)
+                        homeViewModel.addAndPushToServer(date, time)
                     else
                         Toast.makeText(
                             context,

@@ -29,4 +29,7 @@ interface InternalDao {
 
     @Query("delete from internalTable where id in (:listOfId)")
     suspend fun deleteMultiple(listOfId: List<Int>)
+
+    @Query("delete from internalTable")
+    suspend fun deleteAll()
 }

@@ -28,6 +28,9 @@ fun LoginScreen(
     val emailFieldEmpty by loginViewModel.emailFieldEmpty
     val passwordFieldEmpty by loginViewModel.passwordFieldEmpty
 
+    val userExists by loginViewModel.userExists
+    val userExistsCount by loginViewModel.userExistsCount
+
     val unableToLogin by loginViewModel.unableToLogin
 
     val credential by loginViewModel.signedInPasswordCredential.collectAsState()
@@ -40,11 +43,14 @@ fun LoginScreen(
         emailFiled = emailFiled,
         emailNotValid = emailNotValid,
         emailFieldEmpty = emailFieldEmpty,
+        userExists = userExists,
+        userExistsCount = userExistsCount,
         passwordToShort = passwordToShort,
         passwordFieldEmpty = passwordFieldEmpty,
         basicLoginLoadingState = basicLoginLoadingState,
         passwordFiled = passwordFiled,
         changeEmailFiled = {
+            loginViewModel.checkUserExistsStatus()
             loginViewModel.changeEmailFiled(it)
         },
         changePasswordFiled = {

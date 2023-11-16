@@ -15,6 +15,8 @@ data class User(
     // google authenticate
     val name: String? = null,
     val sub: String? = null,
+    // userName
+    val userName: String? = null,
     // data
     val listOfNote: List<Note>? = emptyList()
 )

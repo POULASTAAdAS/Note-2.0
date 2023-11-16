@@ -33,7 +33,7 @@ import com.example.note.R
 import com.example.note.domain.model.Note
 import com.example.note.presentation.common.CustomToastInternet
 import com.example.note.presentation.common.SingleCardForGridView
-import com.example.note.presentation.common.SingleCardForResearchResult
+import com.example.note.presentation.common.SingleCardForSesearchResult
 import com.example.note.presentation.screen.empty.EmptyScreen
 
 @Composable
@@ -118,7 +118,7 @@ fun HomeScreenContent(
                 )
         else
             if (searchTriggered) EmptyScreen(lottie = R.raw.no_search_result)
-            else EmptyScreen(lottie = R.raw.empty_home_screen)
+            else EmptyScreen(lottie = R.raw.lest_go)
     }
 }
 
@@ -188,7 +188,7 @@ fun ShowSearchResult(
                 it._id
             }
         ) {
-            SingleCardForResearchResult(
+            SingleCardForSesearchResult(
                 searchQuery = searchQuery,
                 noteID = it._id,
                 heading = it.heading,

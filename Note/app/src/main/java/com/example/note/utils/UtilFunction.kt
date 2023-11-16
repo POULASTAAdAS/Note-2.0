@@ -4,35 +4,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import com.example.note.domain.model.InternalNote
 import com.example.note.domain.model.Note
 import com.example.note.domain.model.RecentlyDeletedNotes
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
-fun getCurrentDate(): String =
-    SimpleDateFormat(
-        "yyyy-MM-dd",
-        Locale.getDefault()
-    ).format(Date())
+fun getCurrentDate(): LocalDate = LocalDate.now()
+
+fun getTotalDeleteDate(): String = LocalDate.now().plusDays(30).toString()
+
+fun getCurrentTime(): String = LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a"))
+
+fun getLocalDateFromString(value: String): LocalDate = LocalDate.parse(value)
+
+fun getLeftDays(deleteDate: LocalDate): Int =
+    ChronoUnit.DAYS.between(LocalDate.now(), deleteDate).toInt()
 
 
-fun getDeleteDate(): String =
-    SimpleDateFormat(
-    "yyyy-MM-dd",
-    Locale.getDefault()
-).format(Date())
-
-
-fun getCurrentTime(): String = SimpleDateFormat(
-    "hh:mm a",
-    Locale.getDefault()
-).format(Date())
-
-fun getAnnotatedString(
+fun getAnnotatedSearchQuery(
     text: String,
     searchQuery: String,
     color: Color
@@ -52,6 +47,47 @@ fun getAnnotatedString(
                 append(it)
             }
         } else append(it)
+    }
+}
+
+fun getAnnotatedDeleteAccountText(
+    color: Color
+): AnnotatedString = buildAnnotatedString {
+    append("Are you sure you want to ")
+    withStyle(
+        style = SpanStyle(
+            color = color,
+            textDecoration = TextDecoration.Underline
+        )
+    ) {
+        append("delete")
+    }
+    append(" your ")
+    withStyle(
+        style = SpanStyle(
+            color = color,
+            textDecoration = TextDecoration.Underline
+        )
+    ) {
+        append("account.")
+    }
+    append("\nAll ")
+    withStyle(
+        style = SpanStyle(
+            color = color,
+            textDecoration = TextDecoration.Underline
+        )
+    ) {
+        append("data")
+    }
+    append(" will be ")
+    withStyle(
+        style = SpanStyle(
+            color = color,
+            textDecoration = TextDecoration.Underline
+        )
+    ) {
+        append("lost.")
     }
 }
 
@@ -95,6 +131,7 @@ fun convertListOfInternalNoteToNote(listOfInternalNote: List<InternalNote>): Lis
                 content = it.content,
                 createDate = it.createDate,
                 updateDate = it.updateDate,
+                updateTime = it.updateTime,
                 edited = it.edited,
                 pinned = it.pinned,
                 syncState = it.syncState
@@ -120,6 +157,7 @@ fun convertRecentlyDeletedNoteToNote(recentlyDeletedNotes: RecentlyDeletedNotes)
     content = recentlyDeletedNotes.content,
     createDate = recentlyDeletedNotes.createDate,
     updateDate = recentlyDeletedNotes.updateDate,
+    updateTime = recentlyDeletedNotes.updateTime,
     edited = recentlyDeletedNotes.edited,
     pinned = recentlyDeletedNotes.pinned,
     syncState = recentlyDeletedNotes.syncState

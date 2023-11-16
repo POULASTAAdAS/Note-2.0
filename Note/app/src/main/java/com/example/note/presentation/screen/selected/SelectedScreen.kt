@@ -24,13 +24,16 @@ fun SelectedScreen(
     val heading by homeViewModel.heading
     val content by homeViewModel.content
     val createDate by homeViewModel.createDate
+    val updateDate = homeViewModel.note.value.updateDate.toString()
+    val updateTime = homeViewModel.note.value.updateTime.toString()
 
     Scaffold(
         topBar = {
             NoteScreenTopBar(
-                createTime = createDate,
+                createDate = createDate,
+                createTime = "",
                 selectedNote = true,
-                saveClicked = { _ ->
+                saveClicked = { _, _ ->
                     homeViewModel.updateSingle()
                     navigateBack()
                 },
@@ -48,6 +51,8 @@ fun SelectedScreen(
             DataContent(
                 focusManager = focusManager,
                 paddingValues = paddingValues,
+                updateDate = updateDate,
+                updateTime = updateTime,
                 newNote = false,
                 heading = heading,
                 onHeadingChange = {

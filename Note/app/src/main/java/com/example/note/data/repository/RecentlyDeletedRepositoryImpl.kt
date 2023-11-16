@@ -10,9 +10,9 @@ class RecentlyDeletedRepositoryImpl @Inject constructor(
     private val recentlyDeletedDao: RecentlyDeletedDao
 ) {
     fun getAllByDeleteDate() = recentlyDeletedDao.getAllByDeleteDate()
+    suspend fun updateLeftDays(id: Int, leftDays: Int) = recentlyDeletedDao.updateLeftDays(id , leftDays)
 
     fun recoverOne(id: Int) = recentlyDeletedDao.recoverOne(id)
-    fun recoverMultiple(listOfId: ArrayList<Int>) = recentlyDeletedDao.recoverMultiple(listOfId)
 
     suspend fun addOne(recentlyDeletedNotes: RecentlyDeletedNotes) = recentlyDeletedDao.addOne(recentlyDeletedNotes)
 

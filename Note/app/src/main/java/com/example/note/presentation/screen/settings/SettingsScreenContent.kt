@@ -3,8 +3,10 @@ package com.example.note.presentation.screen.settings
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,34 +28,41 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.note.R
 import com.example.note.presentation.common.LoginTextField
 import com.example.note.ui.theme.background
 import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.place_holder
+import com.example.note.utils.getAnnotatedDeleteAccountText
 
 @Composable
 fun SettingsScreenContent(
@@ -76,12 +85,28 @@ fun SettingsScreenContent(
     sortType: String,
     updateSortType: (Boolean?) -> Unit,
     // RecentlyDeletedCard
-    recentlyDeletedNavigationClick: () -> Unit
+    recentlyDeletedNavigationClick: () -> Unit,
+    // logOutCard
+    logOutCardState: Boolean,
+    logOutCardClicked: () -> Unit,
+    logOutConformLogOut: () -> Unit,
+    // delete account
+    deleteAccountCardState: Boolean,
+    deleteAccountCardClicked: () -> Unit,
+    deleteAccountConformClicked: () -> Unit,
+    isLoggedOut: Boolean,
+    isAccountDeleted: Boolean
 ) {
+    val animateBlur by animateDpAsState(
+        targetValue = if (isLoggedOut || isAccountDeleted) 5.dp else 0.dp,
+        label = "blur effect on screen when search on"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.primary)
+            .blur(animateBlur)
             .padding(
                 top = paddingValues.calculateTopPadding() + 10.dp,
                 bottom = paddingValues.calculateBottomPadding(),
@@ -90,7 +115,10 @@ fun SettingsScreenContent(
             ),
         verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
+        val interactionSource = MutableInteractionSource()
+
         UserNameChangeCard(
+            interactionSource = interactionSource,
             context = context,
             network = network,
             userName = userName,
@@ -116,84 +144,36 @@ fun SettingsScreenContent(
         )
 
         RecentlyDeletedCard(
+            interactionSource = interactionSource,
             recentlyDeletedNavigationClick = recentlyDeletedNavigationClick
         )
-    }
-}
 
-@Composable
-fun SyncStatusCard(
-    syncState: Boolean,
-    syncText: String,
-    syncCardEnabled: Boolean,
-    syncCardSwitchClicked: (Boolean) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = background,
-            contentColor = MaterialTheme.colorScheme.inversePrimary
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp
-        ),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Sync",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    color = MaterialTheme.colorScheme.inversePrimary
-                )
+        LogoutCard(
+            network = network,
+            context = context,
+            isLoggedOut = isLoggedOut,
+            interactionSource = interactionSource,
+            cardExpandState = logOutCardState,
+            logOutCardClicked = logOutCardClicked,
+            logOutConformLogOut = logOutConformLogOut
+        )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Switch(
-                        checked = syncState,
-                        enabled = syncCardEnabled,
-                        onCheckedChange = syncCardSwitchClicked,
-                        thumbContent = {
-                            if (syncState)
-                                Icon(imageVector = Icons.Rounded.Check, contentDescription = null)
-                            else Icon(imageVector = Icons.Rounded.Close, contentDescription = null)
-                        },
-                        colors = SwitchDefaults.colors(
-                            checkedBorderColor = MaterialTheme.colorScheme.inversePrimary,
-                            uncheckedBorderColor = MaterialTheme.colorScheme.inversePrimary,
-                            checkedThumbColor = google_login_button,
-                            checkedIconColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            uncheckedTrackColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                }
-            }
-
-            Text(
-                text = syncText,
-                color = place_holder,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Start
-            )
-        }
+        DeleteAccountCard(
+            network = network,
+            context = context,
+            isAccountDeleted = isAccountDeleted,
+            interactionSource = interactionSource,
+            deleteAccountCardState = deleteAccountCardState,
+            deleteAccountCardClicked = deleteAccountCardClicked,
+            deleteAccountConformClicked = deleteAccountConformClicked
+        )
     }
 }
 
 
 @Composable
 fun UserNameChangeCard(
+    interactionSource: MutableInteractionSource,
     context: Context,
     network: Boolean,
     userName: String,
@@ -207,7 +187,7 @@ fun UserNameChangeCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                interactionSource = MutableInteractionSource(),
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = changeUserNameCardState
             ),
@@ -224,6 +204,8 @@ fun UserNameChangeCard(
             modifier = Modifier.padding(8.dp)
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -238,26 +220,21 @@ fun UserNameChangeCard(
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Text(
-                            text = "change",
-                            color = google_login_button,
-                            modifier = Modifier.clickable(
-                                interactionSource = MutableInteractionSource(),
-                                indication = null
-                            ) {
-                                if (!network) Toast.makeText(
-                                    context,
-                                    "Please make sure you have Internet connection",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                else changeUserNameCardState()
-                            }
-                        )
-                    }
+                    Text(
+                        text = "change",
+                        color = google_login_button,
+                        modifier = Modifier.clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null
+                        ) {
+                            if (!network) Toast.makeText(
+                                context,
+                                "Please make sure you have Internet connection",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            else changeUserNameCardState()
+                        }
+                    )
                 }
             }
 
@@ -284,7 +261,9 @@ fun UserNameChangeCard(
             }
 
             AnimatedVisibility(visible = userNameCardState) {
-                Row {
+                Row(
+
+                ) {
                     Button(
                         onClick = {
                             userNameUpdateCancelClicked()
@@ -333,11 +312,75 @@ fun UserNameChangeCard(
     }
 }
 
+@Composable
+fun SyncStatusCard(
+    syncState: Boolean,
+    syncText: String,
+    syncCardEnabled: Boolean,
+    syncCardSwitchClicked: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = background,
+            contentColor = MaterialTheme.colorScheme.inversePrimary
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp
+        ),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Sync",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                    color = MaterialTheme.colorScheme.inversePrimary
+                )
+
+                Switch(
+                    checked = syncState,
+                    enabled = syncCardEnabled,
+                    onCheckedChange = syncCardSwitchClicked,
+                    thumbContent = {
+                        if (syncState)
+                            Icon(imageVector = Icons.Rounded.Check, contentDescription = null)
+                        else Icon(imageVector = Icons.Rounded.Close, contentDescription = null)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedBorderColor = MaterialTheme.colorScheme.inversePrimary,
+                        uncheckedBorderColor = MaterialTheme.colorScheme.inversePrimary,
+                        checkedThumbColor = google_login_button,
+                        checkedIconColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+
+            Text(
+                text = syncText,
+                color = place_holder,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Start
+            )
+        }
+    }
+}
 
 @Composable
 fun SortTypeCard(
     sortType: String,
-    hideSortTypeCardDropDown: (Boolean?) -> Unit // TODO if true Sort by Last Edited else Last Created
+    hideSortTypeCardDropDown: (Boolean?) -> Unit // if true Sort by Last Edited else Last Created
 ) {
     Card(
         modifier = Modifier
@@ -415,7 +458,6 @@ fun SortTypeCard(
     }
 }
 
-
 @Composable
 fun SettingsSortTypeDropDown(
     sortTypeDropDownState: Boolean,
@@ -469,17 +511,16 @@ fun SettingsSortTypeDropDown(
     }
 }
 
-
-
 @Composable
 fun RecentlyDeletedCard(
+    interactionSource: MutableInteractionSource,
     recentlyDeletedNavigationClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                interactionSource = MutableInteractionSource(),
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = recentlyDeletedNavigationClick
             ),
@@ -507,25 +548,224 @@ fun RecentlyDeletedCard(
 }
 
 
-@Preview
 @Composable
-private fun Preview() {
-    SettingsScreenContent(
-        paddingValues = PaddingValues(),
-        network = true,
-        userName = "User",
-        userNameCardState = false,
-        onValueChange = {},
-        changeUserNameCardState = { /*TODO*/ },
-        saveClicked = { /*TODO*/ },
-        userNameUpdateCancelClicked = { /*TODO*/ },
-        syncState = true,
-        syncText = "sync on",
-        sortType = "Last Edited",
-        updateSortType = {},
-        syncCardEnabled = true,
-        syncCardSwitchClicked = {},
-        context = LocalContext.current,
-        recentlyDeletedNavigationClick = {}
-    )
+fun LogoutCard(
+    network: Boolean,
+    context: Context,
+    isLoggedOut: Boolean,
+    interactionSource: MutableInteractionSource,
+    cardExpandState: Boolean,
+    logOutCardClicked: () -> Unit,
+    logOutConformLogOut: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = logOutCardClicked
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = background,
+            contentColor = MaterialTheme.colorScheme.inversePrimary
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                top = 12.dp,
+                bottom = 12.dp,
+                start = 8.dp,
+                end = 8.dp
+            ),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "LogOut",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                    color = MaterialTheme.colorScheme.inversePrimary
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_logout),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.inversePrimary
+                )
+
+
+                AnimatedVisibility(visible = isLoggedOut) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.inversePrimary
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = cardExpandState) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(text = "Are you sure you want to logout !\nIf notes are not synced with cloud they will be lost.")
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        OutlinedButton(
+                            onClick = logOutCardClicked,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.inversePrimary,
+                            ),
+                        ) {
+                            Text(text = "No")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                if (!network)
+                                    Toast.makeText(
+                                        context,
+                                        "Please make sure you have Internet connection",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                else logOutConformLogOut()
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color.Red,
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Color.Red
+                            )
+                        ) {
+                            Text(text = "Yes")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun DeleteAccountCard(
+    network: Boolean,
+    context: Context,
+    isAccountDeleted: Boolean,
+    interactionSource: MutableInteractionSource,
+    deleteAccountCardState: Boolean,
+    deleteAccountCardClicked: () -> Unit,
+    deleteAccountConformClicked: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = deleteAccountCardClicked
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = background,
+            contentColor = MaterialTheme.colorScheme.inversePrimary
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                top = 12.dp,
+                bottom = 12.dp,
+                start = 8.dp,
+                end = 8.dp
+            ),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Color.Red,
+                                textDecoration = TextDecoration.Underline
+                            )
+                        ) {
+                            append("Delete Account")
+                        }
+                    },
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                    color = MaterialTheme.colorScheme.inversePrimary
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_delete_account),
+                    contentDescription = null,
+                    tint = Color.Red
+                )
+
+                AnimatedVisibility(visible = isAccountDeleted) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.inversePrimary
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = deleteAccountCardState) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = getAnnotatedDeleteAccountText(Color.Red)
+                    )
+
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        OutlinedButton(
+                            onClick = deleteAccountCardClicked,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.inversePrimary,
+                            ),
+                        ) {
+                            Text(text = "No")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                if (!network) {
+                                    Toast.makeText(
+                                        context,
+                                        "Please make sure you have Internet connection",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else deleteAccountConformClicked()
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color.Red,
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Color.Red
+                            )
+                        ) {
+                            Text(text = "Yes")
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -88,6 +88,18 @@ class NetworkRepositoryImpl @Inject constructor(
 
     //---------------------------------
 
+    override suspend fun updateUserName(
+        token: String,
+        request: ApiRequest
+    ): DataOrException<ApiResponse, Boolean, Exception> = try {
+        val result = noteApi.updateUserName(token, request)
+        DataOrException(data = result)
+    } catch (e: Exception) {
+        DataOrException(e = e)
+    }
+
+    //---------------------------------
+
     override suspend fun deleteOne(
         token: String,
         request: ApiRequest
@@ -111,4 +123,13 @@ class NetworkRepositoryImpl @Inject constructor(
     }
 
     //---------------------------------
+
+    override suspend fun deleteUser(
+        token: String
+    ): DataOrException<ApiResponse, Boolean, Exception> = try {
+        val result = noteApi.deleteUser(token)
+        DataOrException(data = result)
+    } catch (e: Exception) {
+        DataOrException(e = e)
+    }
 }

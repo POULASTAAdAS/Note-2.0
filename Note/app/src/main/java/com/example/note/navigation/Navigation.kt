@@ -98,6 +98,10 @@ fun SetUpNavGraph(
                 recentlyDeletedNavigationClick = {
                     navHostController.popBackStack()
                     navHostController.navigate(Screens.RecentlyDeleted.path)
+                },
+                navigateToLoginScreen = {
+                    navHostController.popBackStack()
+                    navHostController.navigate(Screens.Login.path)
                 }
             )
         }

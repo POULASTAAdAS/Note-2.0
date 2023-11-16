@@ -25,7 +25,11 @@ import com.example.note.navigation.Screens
 import com.example.note.utils.Constants.BASE_URL
 import com.example.note.utils.convertListOfInternalNoteToNote
 import com.example.note.utils.getCurrentDate
+import com.example.note.utils.getCurrentTime
+import com.example.note.utils.getLeftDays
 import com.example.note.utils.getListOfIdFromInternalNote
+import com.example.note.utils.getLocalDateFromString
+import com.example.note.utils.getTotalDeleteDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -101,14 +105,12 @@ class HomeViewModel @Inject constructor(
 
     private val autoSync = mutableStateOf(true)
     private val sortState = mutableStateOf(true)
-    private val noteView = mutableStateOf(false)
 
 
     init {
         readUserName()
         readAutoSyncState()
         readSortState()
-        readNoteViewSate()
     }
 
 
@@ -142,13 +144,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun readNoteViewSate() {
-        viewModelScope.launch(Dispatchers.IO) {
-            dataStoreOperation.readNoteViewState().collect {
-                noteView.value = it
-            }
-        }
-    }
 
     private suspend fun updateAutoSync() =
         dataStoreOperation.saveAutoSyncState(autoSync.value)
@@ -157,8 +152,6 @@ class HomeViewModel @Inject constructor(
     private suspend fun updateSortState() =
         dataStoreOperation.saveSortState(sortState.value)
 
-    private suspend fun updateNoteView() =
-        dataStoreOperation.saveNoteViewState(noteView.value)
 
 
     private fun performInitialApiCall() {
@@ -351,6 +344,7 @@ class HomeViewModel @Inject constructor(
                                 content = note.content,
                                 createDate = note.createDate!!,
                                 updateDate = note.updateDate!!,
+                                updateTime = note.updateTime!!,
                                 edited = note.edited,
                                 pinned = note.pinned,
                                 syncState = false,
@@ -367,6 +361,7 @@ class HomeViewModel @Inject constructor(
                     content = note.content,
                     createDate = note.createDate!!,
                     updateDate = note.updateDate!!,
+                    updateTime = note.updateTime!!,
                     edited = note.edited,
                     pinned = note.pinned,
                     syncState = false,
@@ -404,6 +399,7 @@ class HomeViewModel @Inject constructor(
                                 content = note.content,
                                 createDate = note.createDate!!,
                                 updateDate = note.updateDate!!,
+                                updateTime = note.updateTime!!,
                                 edited = note.edited,
                                 pinned = note.pinned,
                                 syncState = false,
@@ -420,6 +416,7 @@ class HomeViewModel @Inject constructor(
                     content = note.content,
                     createDate = note.createDate!!,
                     updateDate = note.updateDate!!,
+                    updateTime = note.updateTime!!,
                     edited = note.edited,
                     pinned = note.pinned,
                     syncState = false,
@@ -452,6 +449,7 @@ class HomeViewModel @Inject constructor(
                                     content = note.content,
                                     createDate = note.createDate!!,
                                     updateDate = note.updateDate!!,
+                                    updateTime = note.updateTime!!,
                                     edited = note.edited,
                                     pinned = note.pinned,
                                     syncState = false,
@@ -470,6 +468,7 @@ class HomeViewModel @Inject constructor(
                             content = note.content,
                             createDate = note.createDate!!,
                             updateDate = note.updateDate!!,
+                            updateTime = note.updateTime!!,
                             edited = note.edited,
                             pinned = note.pinned,
                             syncState = false,
@@ -557,14 +556,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun changeNoteView() {
-        expandState.value = false
-        noteView.value = !noteView.value
-        viewModelScope.launch(Dispatchers.IO) {
-            updateNoteView()
-        }
-    }
-
     private fun listOfIdCountAdd() = listOfIdCount.intValue++
     private fun listOfIdCountMinus() = listOfIdCount.intValue--
 
@@ -611,8 +602,8 @@ class HomeViewModel @Inject constructor(
         if (listOfId.value.isNotEmpty()) listOfId.value.clear()
     }
 
-    fun addAndPushToServer(createDate: String) {
-        addOne(createDate)
+    fun addAndPushToServer(createDate: String, createTime: String) {
+        addOne(createDate, createTime)
         showCircularProgressIndicator.value = true
     }
 
@@ -656,9 +647,9 @@ class HomeViewModel @Inject constructor(
     //---------------------------------------------------------------------------------------
     private val noteID = mutableIntStateOf(0)
     val createDate = mutableStateOf("")
+    val updateTime = mutableStateOf("")
     private val edited = mutableIntStateOf(0)
-
-    private val note = mutableStateOf(Note())
+    val note = mutableStateOf(Note())
 
     private fun searchDatabase(searchQuery: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -709,6 +700,7 @@ class HomeViewModel @Inject constructor(
                         heading.value = it.heading!!
                         content.value = it.content!!
                         createDate.value = it.createDate!!
+                        updateTime.value = it.updateTime!!
                         edited.intValue = it.edited
                         note.value = it
                     }
@@ -718,14 +710,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun addOne(createDate: String) {
+    private fun addOne(createDate: String, createTime: String) {
         viewModelScope.launch(Dispatchers.IO) {
             dbNote.addOne(
                 note = Note(
                     heading = heading.value,
                     content = content.value,
                     createDate = createDate,
-                    updateDate = createDate
+                    updateDate = createDate,
+                    updateTime = getCurrentTime()
                 )
             ).also {
                 handleAddApiCall(
@@ -735,6 +728,7 @@ class HomeViewModel @Inject constructor(
                         content = content.value,
                         createDate = createDate,
                         updateDate = createDate,
+                        updateTime = createTime,
                         edited = 0,
                         pinned = false,
                         syncState = true
@@ -762,13 +756,17 @@ class HomeViewModel @Inject constructor(
         showCircularProgressIndicator.value = true
 
         viewModelScope.launch(Dispatchers.IO) {
+            val updateTime = getCurrentTime()
+            val updateDate = getCurrentDate().toString()
+
             dbNote.updateOne(
                 note = Note(
                     _id = noteID.intValue,
                     heading = heading.value,
                     content = content.value,
                     createDate = note.value.createDate,
-                    updateDate = note.value.updateDate,
+                    updateDate = updateDate,
+                    updateTime = updateTime,
                     edited = ++edited.intValue,
                     pinned = note.value.pinned,
                     syncState = note.value.syncState
@@ -780,7 +778,8 @@ class HomeViewModel @Inject constructor(
                         heading = heading.value,
                         content = content.value,
                         createDate = note.value.createDate,
-                        updateDate = note.value.updateDate,
+                        updateDate = updateDate,
+                        updateTime = updateTime,
                         edited = ++edited.intValue,
                         pinned = note.value.pinned,
                         syncState = true
@@ -839,12 +838,46 @@ class HomeViewModel @Inject constructor(
                     content = note.content,
                     createDate = note.createDate!!,
                     updateDate = note.updateDate!!,
+                    updateTime = note.updateTime!!,
                     edited = note.edited,
                     pinned = note.pinned,
                     syncState = note.syncState,
-                    deleteDate = getCurrentDate()
+                    deleteDate = getTotalDeleteDate(),
+                    leftDays = 30
                 )
             )
+        }
+    }
+
+    init {
+        updateLeftDaysAndDeleteRecentlyDeletedNotes()
+    }
+
+    private fun updateLeftDaysAndDeleteRecentlyDeletedNotes() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val recentlyDeletedNotes = MutableStateFlow<List<RecentlyDeletedNotes>>(emptyList())
+
+            dbRecentlyDeleted.getAllByDeleteDate().collect {
+                recentlyDeletedNotes.value = it
+            }
+
+            recentlyDeletedNotes.value.forEach {
+                val deleteDate = getLocalDateFromString(it.deleteDate)
+
+                val leftDays = getLeftDays(deleteDate)
+
+                if (leftDays > 0) {
+                    updateLeftDays(it.id, leftDays = leftDays)
+                } else {
+                    dbRecentlyDeleted.deleteOne(it.id)
+                }
+            }
+        }
+    }
+
+    private fun updateLeftDays(id: Int, leftDays: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbRecentlyDeleted.updateLeftDays(id, leftDays)
         }
     }
 }

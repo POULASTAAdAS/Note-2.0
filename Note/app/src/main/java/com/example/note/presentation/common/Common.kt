@@ -1,5 +1,6 @@
 package com.example.note.presentation.common
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -24,6 +25,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,7 +70,8 @@ import com.example.note.ui.theme.forgot_text
 import com.example.note.ui.theme.google_login_button
 import com.example.note.ui.theme.non_Sync
 import com.example.note.ui.theme.place_holder
-import com.example.note.utils.getAnnotatedString
+import com.example.note.utils.getAnnotatedSearchQuery
+import com.example.note.utils.getCurrentTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,52 +147,39 @@ fun DefaultIconButton(
 }
 
 
-
-
-
 @Composable
 fun BasicLoginButton(
     basicLoginLoadingState: Boolean,
     loginButtonClicked: () -> Unit
 ) {
-    Surface(
+    Button(
+        onClick = loginButtonClicked,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.inversePrimary,
+            contentColor = MaterialTheme.colorScheme.primary
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                top = 8.dp,
-                bottom = 8.dp
-            )
             .animateContentSize(
                 animationSpec = tween(
                     durationMillis = 300,
                     easing = LinearOutSlowInEasing
                 )
             )
-            .clickable {
-                loginButtonClicked()
-            },
-        shape = RoundedCornerShape(40.dp),
-        color = MaterialTheme.colorScheme.inversePrimary,
-        shadowElevation = 10.dp
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (basicLoginLoadingState) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .padding(7.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(
-                    text = "Login",
-                    modifier = Modifier
-                        .padding(16.dp),
-                )
-            }
+        AnimatedVisibility(visible = basicLoginLoadingState) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 2.dp
+            )
+        }
+
+        AnimatedVisibility(visible = !basicLoginLoadingState) {
+            Text(
+                text = "continue",
+                modifier = Modifier
+                    .padding(8.dp),
+            )
         }
     }
 }
@@ -208,25 +199,39 @@ fun ErrorTextFieldIndication(
 
 @Composable
 fun ForgotText(
+    userExistsCount: Int,
     text: String,
     forgotTextClicked: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
 
-    Text(
-        text = text,
-        color = forgot_text,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                indication = null,
-                interactionSource = interactionSource,
-            ) {
-                forgotTextClicked()
-            },
-        textAlign = TextAlign.End,
-        fontSize = MaterialTheme.typography.titleSmall.fontSize
-    )
+        AnimatedVisibility(visible = userExistsCount >= 2) {
+            Text(
+                text = "Remember email try:",
+                color = MaterialTheme.colorScheme.inversePrimary,
+                fontSize = MaterialTheme.typography.titleSmall.fontSize,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+
+        Text(
+            text = text,
+            color = forgot_text,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null,
+                ) {
+                    forgotTextClicked()
+                },
+            textAlign = TextAlign.End,
+            fontSize = MaterialTheme.typography.titleSmall.fontSize
+        )
+    }
 }
 
 
@@ -426,13 +431,12 @@ fun SingleCardForGridView(
 
 
 @Composable
-fun SingleCardForResearchResult(
+fun SingleCardForSesearchResult(
     searchQuery: String,
     noteID: Int,
     heading: String?,
     content: String,
     createDate: String,
-    time: String = "",// TODO add to server database
     navigateToDetailsScreen: (Int) -> Unit,
 ) {
     Card(
@@ -457,10 +461,10 @@ fun SingleCardForResearchResult(
             Row {
                 if (!heading.isNullOrEmpty())
                     Text(
-                        text = getAnnotatedString(
+                        text = getAnnotatedSearchQuery(
                             text = heading,
                             searchQuery = searchQuery,
-                            color = MaterialTheme.colorScheme.error
+                            color = Color.Red
                         ),
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -472,7 +476,7 @@ fun SingleCardForResearchResult(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$createDate, $time",
+                        text = createDate,
                         maxLines = 1,
                         fontSize = MaterialTheme.typography.labelSmall.fontSize
                     )
@@ -480,10 +484,10 @@ fun SingleCardForResearchResult(
             }
 
             Text(
-                text = getAnnotatedString(
+                text = getAnnotatedSearchQuery(
                     text = content,
                     searchQuery = searchQuery,
-                    color = MaterialTheme.colorScheme.error
+                    color = Color.Red
                 ),
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
@@ -527,6 +531,7 @@ fun FilledCircle(
     }
 }
 
+
 @Preview
 @Composable
 private fun Preview() {
@@ -537,7 +542,8 @@ private fun Preview() {
                 content = "this is content",
                 pinned = true,
                 createDate = "2023-10-10",
-                syncState = false
+                syncState = false,
+                updateTime = getCurrentTime()
             ),
             noteEditState = false,
             searchOpen = false,
@@ -546,7 +552,7 @@ private fun Preview() {
             navigateToDetailsScreen = {},
             selectedNoteId = { _, _ ->
 
-            }
+            },
         ) {
 
         }

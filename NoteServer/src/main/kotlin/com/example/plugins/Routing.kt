@@ -14,6 +14,7 @@ import com.example.route.root
 import com.example.route.unAuthorized
 import com.example.route.update.updateMultiple
 import com.example.route.update.updateOne
+import com.example.route.update.updateUserName
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.routing.*
@@ -48,6 +49,8 @@ fun Application.configureRouting() {
 
         updateOne(dataBaseOperation)
         updateMultiple(dataBaseOperation)
+
+        updateUserName(dataBaseOperation)
 
         deleteOne(dataBaseOperation)
         deleteMultiple(dataBaseOperation)

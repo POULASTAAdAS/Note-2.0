@@ -16,15 +16,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.note.presentation.common.DefaultIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreenTopBar(
-    createTime: String = "",
+    createDate: String,
+    createTime: String,
     selectedNote: Boolean = false,
-    saveClicked: (String) -> Unit,
+    saveClicked: (String , String) -> Unit,
     cancelClicked: () -> Unit,
     deleteClicked: () -> Unit
 ) {
@@ -36,7 +36,7 @@ fun NoteScreenTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = createTime,
+                    text = if (selectedNote) createDate else "$createDate, $createTime",
                     modifier = Modifier.weight(.8f),
                     fontSize = MaterialTheme.typography.titleSmall.fontSize,
                     textAlign = TextAlign.Center
@@ -50,7 +50,7 @@ fun NoteScreenTopBar(
                     )
 
                 DefaultIconButton(
-                    onClick = { saveClicked(createTime) },
+                    onClick = { saveClicked(createDate , createTime) },
                     modifier = Modifier.weight(.12f),
                     icon = Icons.Rounded.Check
                 )
@@ -69,12 +69,12 @@ fun NoteScreenTopBar(
     )
 }
 
-@Preview
-@Composable
-private fun Preview() {
-    NoteScreenTopBar(
-        saveClicked = {},
-        cancelClicked = {},
-        deleteClicked = {}
-    )
-}
+//@Preview
+//@Composable
+//private fun Preview() {
+//    NoteScreenTopBar(
+//        saveClicked = {},
+//        cancelClicked = {},
+//        deleteClicked = {}
+//    )
+//}

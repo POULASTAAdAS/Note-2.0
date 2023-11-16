@@ -18,7 +18,8 @@ import com.example.note.connectivity.NetworkObserver
 fun SettingsScreen(
     settingsScreenViewModel: SettingsScreenViewModel,
     navigateBack: () -> Unit,
-    recentlyDeletedNavigationClick: () -> Unit
+    recentlyDeletedNavigationClick: () -> Unit,
+    navigateToLoginScreen: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -29,8 +30,16 @@ fun SettingsScreen(
     val sortState by settingsScreenViewModel.sortState
 
     val userNameCardState by settingsScreenViewModel.userNameCardState
+    val logOutCardState by settingsScreenViewModel.logOutCardState
+    val deleteAccountCardState by settingsScreenViewModel.deleteAccountCardState
+
     val userName by settingsScreenViewModel.userName
     val oldUserName = settingsScreenViewModel.oldUserName
+
+    val isLoggedOut by settingsScreenViewModel.isLoggedOut
+    val isAccountDeleted by settingsScreenViewModel.isAccountDeleted
+
+    val navigateToLogInScreen by settingsScreenViewModel.navigateToLogInScreen
 
     val syncStateText = remember {
         mutableStateOf("auto sync on")
@@ -46,6 +55,10 @@ fun SettingsScreen(
             else "Turn on auto sync to save your notes to the server"
     }
 
+    LaunchedEffect(key1 = navigateToLogInScreen) {
+        if (navigateToLogInScreen) navigateToLoginScreen()
+    }
+
     Scaffold(
         topBar = {
             SettingsTopBar(
@@ -55,6 +68,7 @@ fun SettingsScreen(
     ) { paddingValues ->
         SettingsScreenContent(
             paddingValues = paddingValues,
+            // username
             context = context,
             network = settingsScreenViewModel.checkInternetConnection(),
             userName = userName,
@@ -68,7 +82,10 @@ fun SettingsScreen(
             saveClicked = {
                 if (userName == oldUserName)
                     Toast.makeText(context, "same username", Toast.LENGTH_SHORT).show()
-                else {
+                else if (userName.trim().isEmpty()) {
+                    Toast.makeText(context, "username can't be empty", Toast.LENGTH_SHORT).show()
+                    settingsScreenViewModel.userNameUpdateCancelClicked()
+                } else {
                     settingsScreenViewModel.saveUserName()
                     Toast.makeText(context, "username updated", Toast.LENGTH_SHORT).show()
                 }
@@ -76,6 +93,7 @@ fun SettingsScreen(
             userNameUpdateCancelClicked = {
                 settingsScreenViewModel.userNameUpdateCancelClicked()
             },
+            // auto sync
             syncState = syncState,
             syncText = syncStateText.value,
             syncCardEnabled = settingsScreenViewModel.checkInternetConnection(),
@@ -83,11 +101,31 @@ fun SettingsScreen(
                 settingsScreenViewModel.toggleSyncSwitch(it)
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
+            // sort type
             sortType = if (sortState) "Last Edited" else "Last Created",
             updateSortType = {
                 settingsScreenViewModel.updateSortState(it)
             },
-            recentlyDeletedNavigationClick = recentlyDeletedNavigationClick
+            // recently deleted
+            recentlyDeletedNavigationClick = recentlyDeletedNavigationClick,
+            // logOut
+            logOutCardState = logOutCardState,
+            logOutCardClicked = {
+                settingsScreenViewModel.changeLogoutCardState()
+            },
+            logOutConformLogOut = {
+                settingsScreenViewModel.logOutUser()
+            },
+            // delete account
+            deleteAccountCardState = deleteAccountCardState,
+            deleteAccountCardClicked = {
+                settingsScreenViewModel.changeDeleteAccountCardState()
+            },
+            deleteAccountConformClicked = {
+                settingsScreenViewModel.deleteUser(context)
+            },
+            isLoggedOut = isLoggedOut,
+            isAccountDeleted = isAccountDeleted
         )
     }
 }

@@ -11,7 +11,6 @@ import com.example.note.utils.Constants.PREFERENCES_AUTH_TYPE_KEY
 import com.example.note.utils.Constants.PREFERENCES_AUTO_SYNC_KEY
 import com.example.note.utils.Constants.PREFERENCES_FIRST_TIME_SIGNED_IN_KEY
 import com.example.note.utils.Constants.PREFERENCES_JWT_TOKEN_OR_SESSION_TOKEN_KEY
-import com.example.note.utils.Constants.PREFERENCES_NOTE_VIEW_KEY
 import com.example.note.utils.Constants.PREFERENCES_SIGNED_IN_KEY
 import com.example.note.utils.Constants.PREFERENCES_SORT_STATE_KEY
 import com.example.note.utils.Constants.PREFERENCES_USERNAME
@@ -35,7 +34,6 @@ class DataStoreOperationImpl @Inject constructor(
 
         val autoSyncKey = booleanPreferencesKey(name = PREFERENCES_AUTO_SYNC_KEY)
         val sortStateKey = booleanPreferencesKey(name = PREFERENCES_SORT_STATE_KEY)
-        val noteViewKey = booleanPreferencesKey(name = PREFERENCES_NOTE_VIEW_KEY)
     }
 
     override suspend fun saveUpdateSignedInState(signedInState: Boolean) {
@@ -149,25 +147,6 @@ class DataStoreOperationImpl @Inject constructor(
         }.map {
             val sortState = it[PreferencesKey.sortStateKey] ?: true
             sortState
-        }
-
-    override suspend fun saveNoteViewState(value: Boolean) {
-        dataStore.edit {
-            it[PreferencesKey.noteViewKey] = value
-        }
-    }
-
-    override fun readNoteViewState(): Flow<Boolean> = dataStore
-        .data
-        .catch { e ->
-            if (e is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw e
-            }
-        }.map {
-            val noteView = it[PreferencesKey.noteViewKey] ?: true
-            noteView
         }
 
     override suspend fun saveUserName(value: String) {

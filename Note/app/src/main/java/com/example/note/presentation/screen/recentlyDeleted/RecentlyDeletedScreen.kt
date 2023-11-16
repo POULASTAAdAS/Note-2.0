@@ -1,5 +1,9 @@
 package com.example.note.presentation.screen.recentlyDeleted
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,12 +17,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.note.R
 import com.example.note.domain.model.RecentlyDeletedNotes
+import com.example.note.presentation.common.CustomToast
 import com.example.note.presentation.screen.empty.EmptyScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +72,13 @@ fun RecentlyDeletedContent(
     recoverClicked: (Int) -> Unit,
     deleteOne: (Int) -> Unit
 ) {
+    val showToast = remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(key1 = Unit) {
+        showToast.value = true
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -75,6 +90,17 @@ fun RecentlyDeletedContent(
                 bottom = paddingValues.calculateBottomPadding()
             )
     ) {
+        AnimatedVisibility(
+            visible = showToast.value,
+            enter = fadeIn(
+                animationSpec = tween(1_000)
+            ) + expandVertically(
+                animationSpec = tween(1_000)
+            )
+        ) {
+            CustomToast(text = "The number of days represents the days left until it is permanently deleted")
+        }
+
         if (recentlyDeletedNote.isNotEmpty())
             LazyColumn(
                 modifier = Modifier
@@ -93,10 +119,10 @@ fun RecentlyDeletedContent(
                         noteId = it.id,
                         heading = it.heading ?: "",
                         content = it.content ?: "",
-                        createDate = it.createDate,
+                        deleteDate = it.deleteDate,
+                        leftDays = it.leftDays,
                         recoverClicked = recoverClicked,
-                        deleteOne = deleteOne,
-//                        deleteDays = it.deleteDate
+                        deleteOne = deleteOne
                     )
                 }
             }

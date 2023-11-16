@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class ApiRequest(
     val listOfId: List<String>? = null,
     val note: Note? = null,
-    val listOfNote: List<Note>? = null
+    val listOfNote: List<Note>? = null,
+    val userName: String? = null
 )

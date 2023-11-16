@@ -12,6 +12,7 @@ data class InternalNote(
     val content: String? = null,
     val createDate: String,
     val updateDate: String,
+    val updateTime: String,
     val edited: Int,
     val pinned: Boolean,
     val syncState: Boolean,

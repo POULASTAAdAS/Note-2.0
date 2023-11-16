@@ -35,7 +35,7 @@ sealed class OnBoardingPages(
     )
 
     data object Fifth : OnBoardingPages(
-        lottie = R.raw.lest_go,
+        lottie = R.raw.empty_home_screen,
         title = "Lets GO",
         content = "create an account or login to write down your amazing ideas"
     )
