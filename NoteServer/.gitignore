@@ -35,4 +35,4 @@ out/
 ### VS Code ###
 .vscode/
 
-com/example/utils/GitIgnoreConst.kt
+GitIgnoreConst.kt
