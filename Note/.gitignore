@@ -13,3 +13,4 @@
 .externalNativeBuild
 .cxx
 local.properties
+com/example/note/utils/GitIgnoreConst.kt
